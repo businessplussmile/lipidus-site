@@ -73,10 +73,10 @@ async function testConnection() {
 testConnection();
 
 class ErrorBoundary extends Component<any, any> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+  state = {
+    hasError: false,
+    error: null
+  };
 
   static getDerivedStateFromError(error: any) {
     return { hasError: true, error };
@@ -87,11 +87,10 @@ class ErrorBoundary extends Component<any, any> {
   }
 
   render() {
-    const { hasError, error } = this.state as any;
-    if (hasError) {
+    if (this.state.hasError) {
       let message = "Une erreur est survenue.";
       try {
-        const errObj = JSON.parse(error.message);
+        const errObj = JSON.parse(this.state.error.message);
         if (errObj.error && errObj.error.includes("insufficient permissions")) {
           message = "Erreur de permissions Firestore. Veuillez contacter l'administrateur.";
         }
@@ -115,7 +114,7 @@ class ErrorBoundary extends Component<any, any> {
       );
     }
 
-    return (this.props as any).children;
+    return (this as any).props.children;
   }
 }
 
@@ -1093,9 +1092,11 @@ https://www.google.com/maps?q=${location?.latitude},${location?.longitude}`;
 };
 
 const PartnerForm = ({ onBack }: { onBack: () => void }) => {
+  const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
+    email: '',
     commune: '',
     equipmentType: 'Moto-tricycle',
     experience: '',
@@ -1106,6 +1107,25 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      if (u) {
+        setFormData(prev => ({ ...prev, email: u.email || '' }));
+      }
+    });
+    return () => unsubAuth();
+  }, []);
+
+  const handleGoogleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (err: any) {
+      setError("Erreur de connexion Google: " + err.message);
+    }
+  };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -1145,12 +1165,13 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
     const missing = [];
     if (!formData.fullName) missing.push("Nom complet");
     if (!formData.phone) missing.push("Numéro de téléphone");
+    if (!formData.email) missing.push("Email");
     if (!formData.commune) missing.push("Commune");
     if (!location) missing.push("Position GPS");
     return missing;
   };
 
-  const isFormFilled = formData.fullName && formData.phone && formData.commune;
+  const isFormFilled = formData.fullName && formData.phone && formData.email && formData.commune;
   const isFormValid = isFormFilled && location;
 
   const generateMessage = () => {
@@ -1158,6 +1179,7 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
     return `*NOUVELLE CANDIDATURE PARTENAIRE LIPIDUS PRO*%0A%0A` +
            `*Nom:* ${formData.fullName}%0A` +
            `*Tél:* ${formData.phone}%0A` +
+           `*Email:* ${formData.email}%0A` +
            `*Commune:* ${formData.commune}%0A` +
            `*Équipement:* ${formData.equipmentType}%0A` +
            `*Expérience:* ${formData.experience || 'Non précisée'}%0A%0A` +
@@ -1172,7 +1194,7 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
   const copyToClipboard = () => {
     const mapsLink = location ? `https://www.google.com/maps?q=${location.latitude},${location.longitude}` : 'Non spécifiée';
     const text = `CANDIDATURE PARTENAIRE LIPIDUS PRO\n\n` +
-                 `Nom: ${formData.fullName}\nTél: ${formData.phone}\nCommune: ${formData.commune}\n` +
+                 `Nom: ${formData.fullName}\nTél: ${formData.phone}\nEmail: ${formData.email}\nCommune: ${formData.commune}\n` +
                  `Équipement: ${formData.equipmentType}\nExpérience: ${formData.experience || 'Non précisée'}\n\n` +
                  `Position GPS: ${mapsLink}`;
     
@@ -1183,6 +1205,42 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
   };
 
   const missingInfo = getMissingInfo();
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md bg-white rounded-[40px] shadow-2xl p-10 text-center space-y-8"
+        >
+          <div 
+            onClick={onBack}
+            className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors mb-4"
+          >
+            <ArrowRight className="w-6 h-6 rotate-180" />
+          </div>
+          <div className="w-20 h-20 bg-indigo-100 rounded-[30px] flex items-center justify-center mx-auto">
+            <Shield className="w-10 h-10 text-indigo-600" />
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-3xl font-black font-display">Accès Restreint</h2>
+            <p className="text-gray-500 font-bold leading-relaxed">
+              Pour accéder au portail partenaire LIPIDUS PRO, vous devez vous identifier avec votre compte Google.
+            </p>
+          </div>
+          <button 
+            onClick={handleGoogleLogin}
+            className="w-full py-6 bg-gray-900 text-white rounded-[25px] font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-4 hover:bg-black transition-all shadow-xl shadow-gray-900/20"
+          >
+            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+            Connexion avec Google
+          </button>
+          {error && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest">{error}</p>}
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 font-sans flex flex-col items-center justify-center p-0 md:p-8 lg:p-12 selection:bg-indigo-100 selection:text-indigo-900">
@@ -1253,6 +1311,23 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
                     onChange={handleInputChange}
                     className="block w-full pl-14 pr-6 py-5 bg-gray-50/50 border-2 border-transparent rounded-[25px] text-sm font-bold focus:bg-white focus:border-indigo-600/20 transition-all outline-none placeholder:text-gray-300"
                     placeholder="Ex: 0707..."
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email <span className="text-indigo-500">*</span></label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                    <Send className="h-5 w-5 text-gray-300 group-focus-within:text-indigo-500 transition-colors" />
+                  </div>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    readOnly
+                    className="block w-full pl-14 pr-6 py-5 bg-gray-100 border-2 border-transparent rounded-[25px] text-sm font-bold text-gray-500 cursor-not-allowed outline-none"
+                    placeholder="votre@email.com"
                   />
                 </div>
               </div>
