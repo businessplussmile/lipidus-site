@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, ChangeEvent, Component } from 'react';
-import { MapPin, Copy, Check, Navigation, RefreshCw, User, Phone, Home, Send, Map as MapIcon, AlertTriangle, CheckCircle2, ArrowRight, Shield, Clock, Leaf, Menu, X, ChevronRight, Star, Instagram, Facebook, Twitter, Briefcase, Truck, Calendar, Upload } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { MapPin, Copy, Check, Navigation, RefreshCw, User, Phone, Home, Send, Map as MapIcon, AlertTriangle, CheckCircle2, ArrowRight, Shield, Clock, Leaf, ChevronRight, Star, Instagram, Facebook, Twitter, Briefcase, Truck, Calendar, Upload } from 'lucide-react';
+import { motion, AnimatePresence, useInView } from 'motion/react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -203,8 +203,330 @@ function LocationPicker({ location, setLocation }: { location: LocationData | nu
   ) : null;
 }
 
-const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscribe: () => void, onPartner: () => void, onRecruit: () => void, onAdmin: () => void }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any, recrutement: any, partner: any, footer: any } }) => {
+  const [state, setState] = useState<'hello' | 'walking' | 'jumping' | 'resting' | 'goodbye'>('hello');
+  const [isHovered, setIsHovered] = useState(false);
+  const [recruitPhase, setRecruitPhase] = useState(0);
+  const [recruitMsgIndex, setRecruitMsgIndex] = useState(0);
+  const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  
+  const isHeroInView = useInView(sectionRefs.hero, { amount: 0.3 });
+  const isOffresInView = useInView(sectionRefs.offres, { amount: 0.3 });
+  const isRecrutementInView = useInView(sectionRefs.recrutement, { amount: 0.3 });
+  const isPartnerInView = useInView(sectionRefs.partner, { amount: 0.3 });
+  const isFooterInView = useInView(sectionRefs.footer, { amount: 0.3 });
+
+  useEffect(() => {
+    const handleResize = () => setScreenWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    let t1: any, t2: any, t3: any;
+    if (isRecrutementInView) {
+      setRecruitPhase(1);
+      t1 = setTimeout(() => setRecruitPhase(2), 4000);
+      t2 = setTimeout(() => setRecruitPhase(3), 6000);
+      t3 = setTimeout(() => setRecruitPhase(4), 9000);
+    } else {
+      setRecruitPhase(0);
+      setRecruitMsgIndex(0);
+    }
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [isRecrutementInView]);
+
+  useEffect(() => {
+    if (recruitPhase === 4) {
+      const interval = setInterval(() => {
+        setRecruitMsgIndex(prev => (prev + 1) % 4);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [recruitPhase]);
+
+  useEffect(() => {
+    if (isFooterInView) setState('goodbye');
+    else if (isPartnerInView) setState('resting');
+    else if (isRecrutementInView) setState('jumping');
+    else if (isOffresInView) setState('walking');
+    else if (isHeroInView) setState('hello');
+  }, [isHeroInView, isOffresInView, isRecrutementInView, isPartnerInView, isFooterInView]);
+
+  const getExpression = () => {
+    if (isHovered) return 'surprised';
+    if (state === 'hello') return 'happy';
+    if (state === 'resting') return 'chill';
+    if (state === 'jumping') return 'excited';
+    return 'default';
+  };
+
+  const expression = getExpression();
+  const isRiding = state === 'resting';
+  const isMokoWalking = recruitPhase === 1 || recruitPhase === 3;
+
+  const recruitMessages = [
+    "Regardez cette équipe ! 🤩",
+    "On recrute des commerciaux terrain.",
+    "150 000f/mois + primes ! 💰",
+    "On y va ? 🚀"
+  ];
+
+  const FriendMascot = ({ color, delay }: { color: string, delay: number }) => (
+    <motion.div
+      initial={{ x: 50, opacity: 0 }}
+      animate={{ 
+        x: 0, 
+        opacity: 1,
+        y: isMokoWalking ? [0, -8, 0] : 0,
+        rotate: isMokoWalking ? [-5, 5, -5] : 0
+      }}
+      transition={{ duration: 0.8, repeat: isMokoWalking ? Infinity : 0, delay }}
+      className="relative w-12 h-16 md:w-14 md:h-18 flex flex-col items-center justify-center overflow-hidden rounded-t-[20px] rounded-b-[10px] border-2 border-white/20 shadow-xl"
+      style={{ backgroundColor: color }}
+    >
+      <div className="absolute top-1 left-2 w-3 h-1.5 bg-white/20 rounded-full blur-[1px] rotate-[-15deg]" />
+      <div className="flex gap-2 mb-1">
+        <div className="w-2 h-2 bg-black rounded-full relative">
+          <div className="absolute top-0.5 left-0.5 w-0.5 h-0.5 bg-white rounded-full" />
+        </div>
+        <div className="w-2 h-2 bg-black rounded-full relative">
+          <div className="absolute top-0.5 left-0.5 w-0.5 h-0.5 bg-white rounded-full" />
+        </div>
+      </div>
+      <div className="w-4 h-1 bg-black/10 rounded-full" />
+    </motion.div>
+  );
+
+  return (
+    <motion.div
+      initial={{ y: 200, opacity: 0 }}
+      animate={{ 
+        y: state === 'goodbye' && !isHovered ? 200 : 0, 
+        opacity: state === 'goodbye' && !isHovered ? 0 : 1,
+        x: isOffresInView ? -100 : 
+           recruitPhase === 1 ? -screenWidth + 150 : 
+           recruitPhase === 2 ? -screenWidth - 200 :
+           recruitPhase >= 3 ? -screenWidth + 400 : 0,
+      }}
+      transition={{ 
+        duration: recruitPhase === 1 || recruitPhase === 2 || recruitPhase === 3 ? 4 : 0.6,
+        type: recruitPhase === 0 ? 'spring' : 'tween',
+        damping: 20, 
+        stiffness: 100 
+      }}
+      className="fixed bottom-8 right-8 z-[90] pointer-events-auto"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <motion.div
+        animate={{
+          scale: isHovered ? 1.1 : 1,
+          rotate: isHovered ? [0, -5, 5, 0] : 0,
+        }}
+        className="relative w-16 h-20 md:w-20 md:h-24 cursor-pointer flex flex-col items-center"
+      >
+        {/* Friends (Recruitment Sequence) */}
+        <AnimatePresence>
+          {recruitPhase >= 3 && (
+            <div className="absolute -left-32 top-4 flex gap-4 z-0">
+              <FriendMascot color="#34d399" delay={0} />
+              <FriendMascot color="#6ee7b7" delay={0.1} />
+            </div>
+          )}
+        </AnimatePresence>
+        {/* Moto-Tricycle - Back Layer (Wheels, Seat, Exhaust) */}
+        <AnimatePresence>
+          {isRiding && (
+            <motion.div
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1, y: [0, -1, 0] }}
+              exit={{ x: -100, opacity: 0 }}
+              transition={{ 
+                x: { type: 'spring', damping: 20 },
+                y: { repeat: Infinity, duration: 0.1 }
+              }}
+              className="absolute bottom-0 w-32 h-24 z-0 -left-6"
+            >
+              {/* Wheels */}
+              <div className="absolute bottom-0 left-4 w-10 h-10 bg-gray-900 rounded-full border-4 border-gray-700 flex items-center justify-center shadow-lg">
+                <div className="w-6 h-6 border-2 border-dashed border-gray-600 rounded-full animate-[spin_1s_linear_infinity]" />
+              </div>
+              <div className="absolute bottom-0 right-4 w-10 h-10 bg-gray-900 rounded-full border-4 border-gray-700 flex items-center justify-center shadow-lg">
+                <div className="w-6 h-6 border-2 border-dashed border-gray-600 rounded-full animate-[spin_1s_linear_infinity]" />
+              </div>
+              {/* Seat */}
+              <div className="absolute top-8 left-8 w-14 h-4 bg-gray-800 rounded-t-xl border-b-2 border-gray-900 shadow-inner" />
+              {/* Exhaust Pipe */}
+              <div className="absolute bottom-4 left-[-8px] w-10 h-3 bg-gray-400 rounded-full border-b-2 border-gray-600 rotate-[5deg]">
+                <div className="absolute right-0 w-2 h-2 bg-gray-900 rounded-full" />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Arms - Positioned to hold handlebars */}
+        <div className="absolute inset-0 flex justify-between items-center px-[-10px] z-25 pointer-events-none">
+          <motion.div 
+            animate={{ 
+              rotate: state === 'hello' ? [0, -40, 0] : isRiding ? -30 : 0,
+              y: state === 'jumping' ? -10 : isRiding ? 5 : 0,
+              x: isRiding ? 10 : 0
+            }}
+            transition={{ repeat: state === 'hello' ? Infinity : 0, duration: 0.5 }}
+            className="w-6 h-2 bg-emerald-400 rounded-full origin-right border border-white/10" 
+          />
+          <motion.div 
+            animate={{ 
+              rotate: isRiding ? 30 : 0,
+              y: state === 'jumping' ? -10 : isRiding ? 5 : 0,
+              x: isRiding ? -5 : 0
+            }}
+            className="w-6 h-2 bg-emerald-400 rounded-full origin-left border border-white/10" 
+          />
+        </div>
+
+        {/* Mascot Body */}
+        <motion.div
+          animate={{
+            y: isRiding ? -5 : 
+               isMokoWalking ? [0, -8, 0] : 
+               state === 'jumping' ? [0, -20, 0] : 
+               state === 'walking' ? [0, -4, 0] : 
+               0,
+            rotate: isMokoWalking ? [-5, 5, -5] : 0,
+            scaleY: isRiding ? 0.85 : [1, 0.98, 1.02, 1],
+          }}
+          transition={{
+            duration: isMokoWalking ? 0.8 : state === 'jumping' ? 0.6 : 1.5,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="relative w-full h-full bg-emerald-500 rounded-t-[30px] rounded-b-[15px] shadow-2xl shadow-emerald-500/20 flex flex-col items-center justify-center overflow-hidden border-4 border-white/10 z-10"
+        >
+          <div className="absolute top-2 left-3 w-4 h-2 bg-white/20 rounded-full blur-[1px] rotate-[-15deg]" />
+
+          {/* Eyes */}
+          <div className="flex gap-3 mb-1">
+            <div className="w-2.5 h-2.5 bg-black rounded-full relative">
+              <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full" />
+            </div>
+            <div className="w-2.5 h-2.5 bg-black rounded-full relative">
+              <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full" />
+            </div>
+          </div>
+
+          {/* Mouth */}
+          <motion.div 
+            animate={{ 
+              width: expression === 'surprised' ? 14 : expression === 'happy' ? 18 : 8,
+              height: expression === 'surprised' ? 14 : expression === 'happy' ? 6 : 2,
+              borderRadius: expression === 'happy' ? "0 0 15px 15px" : "15px"
+            }}
+            className="bg-black/20" 
+          />
+        </motion.div>
+
+        {/* Moto-Tricycle - Front Layer (Body, Headlight, Handlebar) */}
+        <AnimatePresence>
+          {isRiding && (
+            <motion.div
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1, y: [0, -1, 0] }}
+              exit={{ x: -100, opacity: 0 }}
+              transition={{ 
+                x: { type: 'spring', damping: 20 },
+                y: { repeat: Infinity, duration: 0.1 }
+              }}
+              className="absolute bottom-0 w-32 h-24 z-30 -left-6 pointer-events-none"
+            >
+              {/* Main Body */}
+              <div className="absolute bottom-2 left-0 w-full h-12 bg-gradient-to-b from-amber-300 to-amber-500 rounded-[20px] border-2 border-amber-600 shadow-xl overflow-hidden">
+                <div className="absolute top-1 left-4 w-16 h-2 bg-white/30 rounded-full blur-[1px]" />
+                <div className="absolute bottom-2 right-8 flex gap-1">
+                  <div className="w-1 h-4 bg-amber-700/30 rounded-full" />
+                  <div className="w-1 h-4 bg-amber-700/30 rounded-full" />
+                </div>
+              </div>
+              {/* Front Fork & Handlebar */}
+              <div className="absolute top-2 right-4 w-4 h-16 bg-gray-400 rounded-full rotate-[-20deg] border-r-2 border-gray-500 shadow-sm" />
+              <div className="absolute top-0 right-0 w-10 h-4 bg-gray-900 rounded-full border-2 border-gray-700 shadow-md flex items-center justify-between px-1">
+                <div className="w-2 h-2 bg-gray-600 rounded-full" />
+                <div className="w-2 h-2 bg-gray-600 rounded-full" />
+              </div>
+              {/* Headlight */}
+              <div className="absolute top-6 right-1 w-6 h-6 bg-white rounded-full border-2 border-amber-200 shadow-[0_0_15px_rgba(255,255,255,0.8)] flex items-center justify-center overflow-hidden">
+                <div className="w-full h-full bg-gradient-to-tr from-amber-100 to-white" />
+              </div>
+              {/* Windshield */}
+              <div className="absolute top-[-10px] right-6 w-8 h-10 bg-sky-200/40 backdrop-blur-sm rounded-t-full border border-white/30 rotate-[-10deg]" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Legs */}
+        {!isRiding && (
+          <div className="flex gap-4 mt-[-5px] z-0">
+            <motion.div 
+              animate={{ 
+                y: state === 'walking' ? [0, -5, 0] : 0,
+                rotate: state === 'walking' ? [0, 15, 0] : 0
+              }}
+              transition={{ repeat: Infinity, duration: 0.4 }}
+              className="w-3 h-5 bg-emerald-600 rounded-full border border-white/10" 
+            />
+            <motion.div 
+              animate={{ 
+                y: state === 'walking' ? [-5, 0, -5] : 0,
+                rotate: state === 'walking' ? [0, -15, 0] : 0
+              }}
+              transition={{ repeat: Infinity, duration: 0.4 }}
+              className="w-3 h-5 bg-emerald-600 rounded-full border border-white/10" 
+            />
+          </div>
+        )}
+
+        {/* Shadow */}
+        {!isRiding && (
+          <motion.div
+            animate={{
+              scale: state === 'jumping' ? [1, 0.6, 1] : [1, 0.9, 1],
+              opacity: state === 'jumping' ? [0.2, 0.1, 0.2] : [0.2, 0.15, 0.2],
+            }}
+            transition={{ duration: state === 'jumping' ? 0.6 : 1.5, repeat: Infinity }}
+            className="w-12 h-2 bg-black rounded-full blur-md mt-2"
+          />
+        )}
+
+        {/* Speech Bubble */}
+        <AnimatePresence>
+          {(isHovered || isOffresInView || isRiding || recruitPhase === 4) && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: -70 }}
+              exit={{ opacity: 0, scale: 0.5, y: 10 }}
+              className="absolute left-1/2 -translate-x-1/2 bg-white px-5 py-2 rounded-2xl shadow-2xl border border-gray-100 whitespace-nowrap z-50"
+            >
+              <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600">
+                {recruitPhase === 4 ? recruitMessages[recruitMsgIndex] : 
+                 isRiding ? "En route pour le partenariat ! 🛵" : 
+                 isOffresInView ? "On s'abonne ? 🚀" : 
+                 "Lipidus à votre service !"}
+              </p>
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-r border-b border-gray-100" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }: { onSubscribe: (offer?: string) => void, onPartner: () => void, onRecruit: () => void, onAdmin: () => void, sectionRefs: any }) => {
   const [images, setImages] = useState<{ [key: string]: string }>({});
   const [isGenerating, setIsGenerating] = useState(true);
 
@@ -278,83 +600,95 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-gray-900 overflow-x-hidden font-sans selection:bg-emerald-100 selection:text-emerald-900">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-2xl border-b border-gray-100/50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="flex justify-between items-center h-20 lg:h-24">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl lg:text-3xl font-black tracking-tighter text-emerald-600 font-display">LIPIDUS</span>
-            </div>
-            
-            {/* Desktop Menu */}
-            <div className="hidden md:flex items-center gap-12">
-              <a href="#offres" className="text-[10px] font-black text-gray-400 hover:text-emerald-600 transition-all uppercase tracking-[0.3em]">Nos Offres</a>
-              <div 
-                onClick={onRecruit}
-                className="cursor-pointer text-[10px] font-black text-gray-400 hover:text-amber-600 transition-all uppercase tracking-[0.3em]"
-              >
-                Recrutement
-              </div>
-              <a href="#contact" className="text-[10px] font-black text-gray-400 hover:text-emerald-600 transition-all uppercase tracking-[0.3em]">Contact</a>
-              <div 
-                onClick={onPartner}
-                className="cursor-pointer text-gray-400 text-[10px] font-black uppercase tracking-[0.3em] hover:text-indigo-600 transition-all"
-              >
-                Devenir Partenaire
-              </div>
-              <div 
-                onClick={onSubscribe}
-                className="cursor-pointer text-emerald-600 text-[10px] font-black uppercase tracking-[0.3em] border-b-2 border-emerald-600 pb-1 hover:text-emerald-700 hover:border-emerald-700 transition-all"
-              >
-                S'abonner
-              </div>
-            </div>
+    <div className="min-h-screen bg-[#f9f9f7] text-gray-900 overflow-x-hidden font-sans selection:bg-emerald-100 selection:text-emerald-900">
+      {/* Minimalist Hero Section (Navbar Replacement) */}
+      <section ref={sectionRefs.hero} className="h-screen w-full flex flex-col items-center justify-between py-16 lg:py-24 relative overflow-hidden">
+        {/* Top Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="px-6 py-2 border border-black/5 rounded-full"
+        >
+          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-black">
+            Abidjan, Côte d'Ivoire
+          </span>
+        </motion.div>
 
-            {/* Mobile Menu Toggle */}
-            <div className="md:hidden">
-              <div onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 cursor-pointer">
-                {isMenuOpen ? <X className="w-8 h-8 text-gray-900" /> : <Menu className="w-8 h-8 text-gray-900" />}
+        {/* Main Title */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.4 }}
+          className="flex flex-col items-center"
+        >
+          <h1 className="text-[16vw] font-black leading-none tracking-[-0.08em] text-black uppercase font-display">
+            Lipidus
+          </h1>
+        </motion.div>
+
+        {/* Info Line */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="flex flex-col md:flex-row items-center gap-12 lg:gap-16"
+        >
+          <div className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">
+            Lipidus votre service clé en main
+          </div>
+          
+          <div className="hidden md:block w-[1px] h-12 bg-black/5" />
+          
+          <div className="flex items-center gap-8 group cursor-default">
+            <div className="flex -space-x-5">
+              {[1, 2, 3].map((i) => (
+                <motion.div 
+                  key={i} 
+                  whileHover={{ y: -5, scale: 1.05, zIndex: 10 }}
+                  className="w-14 h-14 rounded-full border-[6px] border-[#f9f9f7] overflow-hidden bg-white shadow-xl shadow-black/5 relative transition-all duration-300"
+                >
+                  <img 
+                    src={`https://i.pravatar.cc/150?u=lipidus_${i}`} 
+                    alt="User" 
+                    className="w-full h-full object-cover transition-all duration-500 opacity-90 hover:opacity-100"
+                    referrerPolicy="no-referrer"
+                  />
+                </motion.div>
+              ))}
+              <motion.div 
+                whileHover={{ y: -5, scale: 1.05, zIndex: 10 }}
+                className="w-14 h-14 rounded-full border-[6px] border-[#f9f9f7] bg-amber-400 flex items-center justify-center shadow-xl shadow-amber-400/20 relative z-0"
+              >
+                <span className="text-[10px] font-black text-white">+</span>
+              </motion.div>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-black text-black leading-none tracking-tighter">2,500+</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
               </div>
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1.5">Clients satisfaits</span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
-            >
-              <div className="px-6 py-10 space-y-8">
-                <a href="#offres" onClick={() => setIsMenuOpen(false)} className="block text-2xl font-black text-gray-900 uppercase tracking-tighter">Nos Offres</a>
-                <div 
-                  onClick={() => { setIsMenuOpen(false); onRecruit(); }}
-                  className="text-gray-900 text-2xl font-black uppercase tracking-tighter hover:text-amber-600 transition-colors cursor-pointer"
-                >
-                  Recrutement
-                </div>
-                <a href="#contact" onClick={() => setIsMenuOpen(false)} className="block text-2xl font-black text-gray-900 uppercase tracking-tighter">Contact</a>
-                <div 
-                  onClick={() => { setIsMenuOpen(false); onPartner(); }}
-                  className="text-gray-900 text-2xl font-black uppercase tracking-tighter hover:text-emerald-600 transition-colors cursor-pointer"
-                >
-                  Devenir Partenaire
-                </div>
-                <div 
-                  onClick={() => { setIsMenuOpen(false); onSubscribe(); }}
-                  className="text-emerald-600 text-2xl font-black uppercase tracking-tighter border-b-4 border-emerald-600 inline-block"
-                >
-                  S'abonner
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+        {/* Scroll Indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 1 }}
+          className="flex flex-col items-center"
+        >
+          <div className="w-6 h-10 border-2 border-black/5 rounded-full flex justify-center p-1.5">
+            <motion.div
+              animate={{ y: [0, 14, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              className="w-1 h-1 bg-amber-400 rounded-full"
+            />
+          </div>
+        </motion.div>
+      </section>
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
@@ -366,24 +700,24 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
               className="lg:col-span-7"
             >
-              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-[0.3em] mb-10">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-[0.3em] mb-10">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                 Abidjan, Côte d'Ivoire
               </div>
               <h1 className="text-6xl md:text-7xl lg:text-[110px] font-black leading-[0.85] mb-12 tracking-[-0.05em] text-gray-900 font-display">
-                Gardez les mains <span className="text-emerald-600">propre</span>, on se sali pour <span className="text-emerald-600">vous</span>.
+                Gardez les mains <span className="text-amber-500">propre</span>, on se sali pour <span className="text-amber-500">vous</span>.
               </h1>
               <p className="text-lg lg:text-xl text-gray-500 mb-16 max-w-xl leading-relaxed font-medium">
                 LIPIDUS redéfinit la propreté urbaine à Abidjan. Un service de collecte de proximité, fiable et engagé pour un environnement sain.
               </p>
               <div 
-                onClick={onSubscribe}
+                onClick={() => onSubscribe()}
                 className="inline-flex items-center gap-6 cursor-pointer group"
               >
-                <span className="text-xl lg:text-2xl font-black uppercase tracking-tighter text-emerald-600 border-b-4 border-emerald-600 pb-1 group-hover:text-emerald-700 group-hover:border-emerald-700 transition-all font-display">
+                <span className="text-xl lg:text-2xl font-black uppercase tracking-tighter text-amber-500 border-b-4 border-amber-500 pb-1 group-hover:text-amber-600 group-hover:border-amber-600 transition-all font-display">
                   Rejoindre l'aventure
                 </span>
-                <div className="w-12 h-12 rounded-full border-2 border-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                <div className="w-12 h-12 rounded-full border-2 border-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all">
                   <ArrowRight className="w-6 h-6" />
                 </div>
               </div>
@@ -416,7 +750,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
                 className="absolute -bottom-8 -left-8 lg:-bottom-12 lg:-left-12 bg-white p-8 lg:p-12 rounded-[30px] lg:rounded-[50px] shadow-2xl border border-gray-50 hidden md:block"
               >
                 <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 lg:w-20 lg:h-20 bg-emerald-600 rounded-2xl lg:rounded-3xl flex items-center justify-center">
+                  <div className="w-14 h-14 lg:w-20 lg:h-20 bg-amber-500 rounded-2xl lg:rounded-3xl flex items-center justify-center">
                     <Shield className="w-6 h-6 lg:w-10 lg:h-10 text-white" />
                   </div>
                   <div>
@@ -431,7 +765,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
       </section>
 
       {/* Offers Section */}
-      <section id="offres" className="py-32 lg:py-48 bg-white">
+      <section ref={sectionRefs.offres} id="offres" className="py-32 lg:py-48 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="mb-24 lg:mb-32">
             <h2 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.5em] mb-8">Nos Formules</h2>
@@ -492,7 +826,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
                   ))}
                 </ul>
                 <div 
-                  onClick={offer.pro ? onPartner : onSubscribe}
+                  onClick={() => offer.pro ? onPartner() : onSubscribe(offer.title)}
                   className={`cursor-pointer text-center py-6 lg:py-8 rounded-[25px] lg:rounded-[35px] font-black uppercase tracking-[0.2em] text-[10px] transition-all ${offer.pro ? 'bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30 hover:bg-indigo-700' : offer.popular ? 'bg-emerald-600 text-white shadow-2xl shadow-emerald-600/30 hover:bg-emerald-700' : 'bg-gray-900 text-white hover:bg-black'}`}
                 >
                   {offer.pro ? "Devenir Partenaire" : "S'abonner"}
@@ -504,7 +838,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
       </section>
 
       {/* Recruitment Section */}
-      <section id="recrutement" className="py-32 lg:py-48 bg-gray-900 text-white overflow-hidden">
+      <section ref={sectionRefs.recrutement} id="recrutement" className="py-32 lg:py-48 bg-gray-900 text-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-24 lg:gap-32 items-center">
             <motion.div 
@@ -564,7 +898,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
       </section>
 
       {/* Partner Section */}
-      <section className="py-32 lg:py-48 bg-white overflow-hidden">
+      <section ref={sectionRefs.partner} className="py-32 lg:py-48 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-24 lg:gap-32 items-center">
             <motion.div
@@ -623,7 +957,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="bg-gray-900 text-white pt-32 lg:pt-48 pb-16">
+      <footer ref={sectionRefs.footer} id="contact" className="bg-gray-900 text-white pt-32 lg:pt-48 pb-16">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-12 gap-24 mb-32">
             <div className="lg:col-span-6">
@@ -649,7 +983,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
                   <li><a href="#" className="hover:text-white transition-colors">Accueil</a></li>
                   <li><a href="#offres" className="hover:text-white transition-colors">Offres</a></li>
                   <li><a href="#recrutement" className="hover:text-white transition-colors">Recrutement</a></li>
-                  <li><div onClick={onSubscribe} className="hover:text-white transition-colors cursor-pointer">S'abonner</div></li>
+                  <li><div onClick={() => onSubscribe()} className="hover:text-white transition-colors cursor-pointer">S'abonner</div></li>
                 </ul>
               </div>
 
@@ -672,12 +1006,13 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
   );
 };
 
-const RegistrationForm = ({ onBack }: { onBack: () => void }) => {
+const RegistrationForm = ({ onBack, initialOffer }: { onBack: () => void, initialOffer?: string }) => {
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
     commune: '',
     neighborhood: '',
+    offer: initialOffer || '',
   });
   const [location, setLocation] = useState<LocationData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -771,6 +1106,7 @@ const RegistrationForm = ({ onBack }: { onBack: () => void }) => {
 📞 *Téléphone :* ${formData.phone || 'Non renseigné'}
 🏙️ *Commune :* ${formData.commune || 'Non renseigné'}
 📍 *Quartier/Repère :* ${formData.neighborhood || 'Non renseigné'}
+💎 *Offre choisie :* ${formData.offer || 'Non renseignée'}
 
 🗺️ *Coordonnées GPS :*
 Latitude: ${location?.latitude.toFixed(6)}
@@ -796,7 +1132,7 @@ https://www.google.com/maps?q=${location?.latitude},${location?.longitude}`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`, '_blank');
   };
 
-  const isFormFilled = formData.fullName.trim() !== '' && formData.phone.length >= 8 && formData.commune.trim() !== '';
+  const isFormFilled = formData.fullName.trim() !== '' && formData.phone.length >= 8 && formData.commune.trim() !== '' && formData.offer !== '';
   const isFormValid = isFormFilled && location !== null;
 
   const getMissingInfo = () => {
@@ -804,6 +1140,7 @@ https://www.google.com/maps?q=${location?.latitude},${location?.longitude}`;
     if (formData.fullName.trim() === '') missing.push("votre nom");
     if (formData.phone.length < 8) missing.push("un numéro de téléphone valide");
     if (formData.commune.trim() === '') missing.push("votre commune");
+    if (formData.offer === '') missing.push("le choix d'une offre");
     if (!location) missing.push("votre position GPS (bouton vert)");
     return missing;
   };
@@ -916,6 +1253,28 @@ https://www.google.com/maps?q=${location?.latitude},${location?.longitude}`;
                     className="block w-full pl-14 pr-6 py-5 bg-gray-50/50 border-2 border-transparent rounded-[25px] text-sm font-bold focus:bg-white focus:border-emerald-600/20 transition-all outline-none placeholder:text-gray-300"
                     placeholder="Ex: Près de la pharmacie..."
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Offre choisie <span className="text-emerald-500">*</span></label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                    <Leaf className="h-5 w-5 text-gray-300 group-focus-within:text-emerald-500 transition-colors" />
+                  </div>
+                  <select
+                    name="offer"
+                    value={formData.offer}
+                    onChange={(e) => setFormData(prev => ({ ...prev, offer: e.target.value }))}
+                    className="block w-full pl-14 pr-6 py-5 bg-gray-50/50 border-2 border-transparent rounded-[25px] text-sm font-bold focus:bg-white focus:border-emerald-600/20 transition-all outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="">Choisir une offre</option>
+                    <option value="Hebdomadaire">Hebdomadaire (1 500f / semaine)</option>
+                    <option value="Mensuel">Mensuel (5 000f / mois)</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-6 flex items-center pointer-events-none">
+                    <ArrowRight className="h-5 w-5 text-gray-300 rotate-90" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1984,74 +2343,268 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
+const LipiMascot = () => (
+  <div className="relative flex flex-col items-center">
+    {/* Juggling Sparks */}
+    <div className="absolute -top-12 w-24 h-24">
+      {[0, 1, 2].map((i) => (
+        <motion.div
+          key={i}
+          animate={{
+            x: [Math.cos(i * 2) * 30, Math.cos(i * 2 + 2) * 30, Math.cos(i * 2) * 30],
+            y: [Math.sin(i * 2) * 30, Math.sin(i * 2 + 2) * 30, Math.sin(i * 2) * 30],
+            scale: [0.8, 1.2, 0.8],
+            opacity: [0.4, 1, 0.4],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            delay: i * 0.5,
+            ease: "easeInOut",
+          }}
+          className="absolute left-1/2 top-1/2 w-3 h-3 bg-amber-400 rounded-full blur-[1px] shadow-lg shadow-amber-400/50"
+        />
+      ))}
+    </div>
+
+    <div className="relative">
+      {/* Arms */}
+      <div className="absolute inset-0 flex justify-between items-center -mx-4 z-0">
+        <motion.div 
+          animate={{ rotate: [-20, 20, -20] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="w-6 h-2 bg-emerald-400 rounded-full origin-right border border-white/10" 
+        />
+        <motion.div 
+          animate={{ rotate: [20, -20, 20] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="w-6 h-2 bg-emerald-400 rounded-full origin-left border border-white/10" 
+        />
+      </div>
+
+      {/* Mascot Body */}
+      <motion.div
+        animate={{
+          y: [0, -8, 0],
+          rotate: [-1, 1, -1],
+          scale: [1, 1.02, 1],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="relative w-20 h-24 bg-emerald-500 rounded-t-[40px] rounded-b-[20px] shadow-2xl shadow-emerald-500/20 flex flex-col items-center justify-center overflow-hidden z-10"
+      >
+        {/* Shine */}
+        <div className="absolute top-2 left-4 w-6 h-3 bg-white/20 rounded-full blur-[2px] rotate-[-15deg]" />
+        
+        {/* Eyes Container */}
+        <div className="flex gap-4 mb-2">
+          <div className="w-3 h-3 bg-black rounded-full relative">
+            <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full" />
+          </div>
+          <div className="w-3 h-3 bg-black rounded-full relative">
+            <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full" />
+          </div>
+        </div>
+        
+        {/* Mouth */}
+        <motion.div 
+          animate={{ width: [12, 16, 12] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          className="w-4 h-1.5 bg-black/20 rounded-full" 
+        />
+      </motion.div>
+
+      {/* Legs */}
+      <div className="flex gap-6 -mt-2 z-0 justify-center">
+        <motion.div 
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 0.75, repeat: Infinity }}
+          className="w-3 h-6 bg-emerald-600 rounded-full border border-white/10" 
+        />
+        <motion.div 
+          animate={{ y: [-4, 0, -4] }}
+          transition={{ duration: 0.75, repeat: Infinity }}
+          className="w-3 h-6 bg-emerald-600 rounded-full border border-white/10" 
+        />
+      </div>
+    </div>
+
+    {/* Shadow */}
+    <motion.div
+      animate={{
+        scale: [1, 0.8, 1],
+        opacity: [0.2, 0.1, 0.2],
+      }}
+      transition={{
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+      className="w-16 h-3 bg-black rounded-full blur-md mt-4"
+    />
+  </div>
+);
+
+const MeltingLoader = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#f9f9f7]"
+  >
+    <div className="relative mb-12">
+      <motion.div
+        animate={{
+          scale: [1, 1.3, 1],
+          rotate: [0, 180, 360],
+          borderRadius: ["30%", "50%", "30%"],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="w-32 h-32 bg-amber-400/20 blur-2xl"
+      />
+      <motion.div
+        animate={{
+          scale: [1.3, 1, 1.3],
+          rotate: [360, 180, 0],
+          borderRadius: ["50%", "30%", "50%"],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="absolute inset-0 w-32 h-32 bg-emerald-500/20 blur-2xl"
+      />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <LipiMascot />
+      </div>
+    </div>
+    
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="text-center"
+    >
+      <p className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-400">Lipidus en mouvement</p>
+      <div className="flex justify-center gap-1 mt-3">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+            className="w-1 h-1 bg-amber-400 rounded-full"
+          />
+        ))}
+      </div>
+    </motion.div>
+  </motion.div>
+);
+
 export default function App() {
   const [view, setView] = useState<'home' | 'register' | 'partner' | 'recruit' | 'admin'>('home');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [pendingView, setPendingView] = useState<'home' | 'register' | 'partner' | 'recruit' | 'admin' | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<string>('');
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [view]);
+  const handleNavigate = (nextView: 'home' | 'register' | 'partner' | 'recruit' | 'admin', offer: string = '') => {
+    setSelectedOffer(offer);
+    setIsTransitioning(true);
+    setPendingView(nextView);
+    
+    // Artificial delay for the addictive loader
+    setTimeout(() => {
+      setView(nextView);
+      window.scrollTo(0, 0);
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setPendingView(null);
+      }, 600);
+    }, 800);
+  };
+
+  const sectionRefs = {
+    hero: useRef(null),
+    offres: useRef(null),
+    recrutement: useRef(null),
+    partner: useRef(null),
+    footer: useRef(null)
+  };
 
   return (
     <ErrorBoundary>
+      <AnimatePresence>
+        {isTransitioning && <MeltingLoader />}
+      </AnimatePresence>
+
       <AnimatePresence mode="wait">
-        {view === 'home' && (
+        {!isTransitioning && view === 'home' && (
           <motion.div
             key="home"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
             <LandingPage 
-              onSubscribe={() => setView('register')} 
-              onPartner={() => setView('partner')}
-              onRecruit={() => setView('recruit')}
-              onAdmin={() => setView('admin')}
+              onSubscribe={(offer) => handleNavigate('register', offer)} 
+              onPartner={() => handleNavigate('partner')}
+              onRecruit={() => handleNavigate('recruit')}
+              onAdmin={() => handleNavigate('admin')}
+              sectionRefs={sectionRefs}
             />
+            <LipiCompanion sectionRefs={sectionRefs} />
           </motion.div>
         )}
-        {view === 'register' && (
+        {!isTransitioning && view === 'register' && (
           <motion.div
             key="register"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.3, type: 'spring', damping: 25, stiffness: 120 }}
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 1.02 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <RegistrationForm onBack={() => setView('home')} />
+            <RegistrationForm onBack={() => handleNavigate('home')} initialOffer={selectedOffer} />
           </motion.div>
         )}
-        {view === 'partner' && (
+        {!isTransitioning && view === 'partner' && (
           <motion.div
             key="partner"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.3, type: 'spring', damping: 25, stiffness: 120 }}
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 1.02 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <PartnerForm onBack={() => setView('home')} />
+            <PartnerForm onBack={() => handleNavigate('home')} />
           </motion.div>
         )}
-        {view === 'recruit' && (
+        {!isTransitioning && view === 'recruit' && (
           <motion.div
             key="recruit"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.3, type: 'spring', damping: 25, stiffness: 120 }}
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 1.02 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <RecruitmentForm onBack={() => setView('home')} />
+            <RecruitmentForm onBack={() => handleNavigate('home')} />
           </motion.div>
         )}
-        {view === 'admin' && (
+        {!isTransitioning && view === 'admin' && (
           <motion.div
             key="admin"
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -100 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 1.02 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <AdminPage onBack={() => setView('home')} />
+            <AdminPage onBack={() => handleNavigate('home')} />
           </motion.div>
         )}
       </AnimatePresence>

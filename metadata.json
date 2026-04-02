@@ -1,5 +1,5 @@
 {
-  "name": "Remix: Remix: LIPIDUS - Gestion des Déchets Ménagers",
+  "name": "lipidus-ci",
   "description": "Site officiel de LIPIDUS. Service de collecte de déchets ménagers à domicile. Abonnez-vous pour une ville plus propre et un environnement sain.",
   "requestFramePermissions": [
     "geolocation",
