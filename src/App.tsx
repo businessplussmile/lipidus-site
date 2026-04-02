@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import { GoogleGenAI } from "@google/genai";
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, getDocFromServer } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, getDocFromServer, collection } from 'firebase/firestore';
 
 // Error Handling Types
 enum OperationType {
@@ -87,10 +87,11 @@ class ErrorBoundary extends Component<any, any> {
   }
 
   render() {
-    if (this.state.hasError) {
+    const { hasError, error } = this.state as any;
+    if (hasError) {
       let message = "Une erreur est survenue.";
       try {
-        const errObj = JSON.parse(this.state.error.message);
+        const errObj = JSON.parse(error.message);
         if (errObj.error && errObj.error.includes("insufficient permissions")) {
           message = "Erreur de permissions Firestore. Veuillez contacter l'administrateur.";
         }
@@ -114,7 +115,7 @@ class ErrorBoundary extends Component<any, any> {
       );
     }
 
-    return this.props.children;
+    return (this.props as any).children;
   }
 }
 
@@ -209,17 +210,25 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: { onSubscri
   const [isGenerating, setIsGenerating] = useState(true);
 
   useEffect(() => {
-    // Listen to images in Firestore
-    const unsub = onSnapshot(doc(db, 'settings', 'images'), (docSnap) => {
-      if (docSnap.exists()) {
-        setImages(docSnap.data() as { [key: string]: string });
+    // Listen to images in Firestore (using individual documents to avoid 1MB limit)
+    const unsub = onSnapshot(collection(db, 'settings'), (snapshot) => {
+      const newImages: { [key: string]: string } = {};
+      snapshot.forEach(docSnap => {
+        if (docSnap.id.startsWith('img_')) {
+          const key = docSnap.id.replace('img_', '');
+          newImages[key] = docSnap.data().url;
+        }
+      });
+
+      if (Object.keys(newImages).length > 0) {
+        setImages(prev => ({ ...prev, ...newImages }));
         setIsGenerating(false);
       } else {
         // If no images in Firestore, try to load from localStorage or generate
         loadInitialImages();
       }
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'settings/images');
+      handleFirestoreError(error, OperationType.GET, 'settings');
     });
 
     const loadInitialImages = async () => {
@@ -1698,12 +1707,17 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
 
   useEffect(() => {
     // Listen to images in Firestore
-    const unsub = onSnapshot(doc(db, 'settings', 'images'), (docSnap) => {
-      if (docSnap.exists()) {
-        setImages(docSnap.data() as { [key: string]: string });
-      }
+    const unsub = onSnapshot(collection(db, 'settings'), (snapshot) => {
+      const newImages: { [key: string]: string } = {};
+      snapshot.forEach(docSnap => {
+        if (docSnap.id.startsWith('img_')) {
+          const key = docSnap.id.replace('img_', '');
+          newImages[key] = docSnap.data().url;
+        }
+      });
+      setImages(newImages);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'settings/images');
+      handleFirestoreError(error, OperationType.GET, 'settings');
     });
 
     // Listen to auth state
@@ -1756,10 +1770,10 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
         if (user && user.email === "jorisahoussi4@gmail.com") {
           setIsSaving(true);
           try {
-            await setDoc(doc(db, 'settings', 'images'), newImages);
+            await setDoc(doc(db, 'settings', `img_${key}`), { url: base64 });
             setError('');
           } catch (err: any) {
-            handleFirestoreError(err, OperationType.WRITE, 'settings/images');
+            handleFirestoreError(err, OperationType.WRITE, `settings/img_${key}`);
           } finally {
             setIsSaving(false);
           }

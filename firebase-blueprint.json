@@ -1,21 +1,30 @@
 {
   "entities": {
-    "Settings": {
-      "title": "Application Settings",
-      "description": "Global settings for the application, including images.",
+    "SiteImage": {
+      "title": "Site Image",
+      "description": "A single image stored in Firestore.",
       "type": "object",
       "properties": {
-        "images": {
-          "type": "object",
-          "description": "Mapping of image keys to base64 strings or URLs."
+        "url": {
+          "type": "string",
+          "description": "Base64 data of the image."
         }
-      }
+      },
+      "required": ["url"]
     }
   },
   "firestore": {
-    "/settings/images": {
-      "schema": "Settings",
-      "description": "The main images for the landing page."
+    "/settings/img_collector": {
+      "schema": "SiteImage",
+      "description": "The collector image for the hero section."
+    },
+    "/settings/img_commercials": {
+      "schema": "SiteImage",
+      "description": "The commercials image for the recruitment section."
+    },
+    "/settings/img_partner": {
+      "schema": "SiteImage",
+      "description": "The partner image for the pro section."
     }
   }
 }

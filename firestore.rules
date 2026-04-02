@@ -22,11 +22,11 @@ service cloud.firestore {
     // Rules
     // ===============================================================
 
-    match /settings/images {
+    match /settings/{docId} {
       // Publicly readable so visitors can see the landing page images
       allow read: if true;
-      // Only admins can update the images
-      allow write: if isAdmin() && hasOnlyAllowedFields(['collector', 'commercials', 'partner']);
+      // Only admins can update the images (individual documents to avoid 1MB limit)
+      allow write: if isAdmin() && docId in ['img_collector', 'img_commercials', 'img_partner'] && hasOnlyAllowedFields(['url']);
     }
   }
 }
