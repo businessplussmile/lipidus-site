@@ -1,0 +1,21 @@
+{
+  "entities": {
+    "Settings": {
+      "title": "Application Settings",
+      "description": "Global settings for the application, including images.",
+      "type": "object",
+      "properties": {
+        "images": {
+          "type": "object",
+          "description": "Mapping of image keys to base64 strings or URLs."
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/settings/images": {
+      "schema": "Settings",
+      "description": "The main images for the landing page."
+    }
+  }
+}

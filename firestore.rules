@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "jorisahoussi4@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /settings/images {
+      // Publicly readable so visitors can see the landing page images
+      allow read: if true;
+      // Only admins can update the images
+      allow write: if isAdmin() && hasOnlyAllowedFields(['collector', 'commercials', 'partner']);
+    }
+  }
+}
