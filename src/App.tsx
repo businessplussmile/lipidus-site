@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import { GoogleGenAI } from "@google/genai";
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, getDocFromServer, collection } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, getDocFromServer, collection, deleteDoc } from 'firebase/firestore';
 
 // Error Handling Types
 enum OperationType {
@@ -1571,15 +1571,12 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
 
   useEffect(() => {
     if (user) {
-      const unsub = onSnapshot(collection(db, 'partner_candidates'), (snapshot) => {
-        let status: any = null;
-        snapshot.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data.userId === user.uid) {
-            status = data.status;
-          }
-        });
-        setPartnerStatus(status);
+      const unsub = onSnapshot(doc(db, 'partner_candidates', user.uid), (docSnap) => {
+        if (docSnap.exists()) {
+          setPartnerStatus(docSnap.data().status);
+        } else {
+          setPartnerStatus(null);
+        }
       });
       return () => unsub();
     }
@@ -1657,14 +1654,17 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
     if (!isFormValid || !user) return;
     setIsSubmitting(true);
     try {
-      const candidateId = `${user.uid}_${Date.now()}`;
+      const candidateId = user.uid;
+      // Preserve 'validated' status if already set by admin
+      const newStatus = partnerStatus === 'validated' ? 'validated' : 'pending';
+      
       await setDoc(doc(db, 'partner_candidates', candidateId), {
         ...formData,
         location,
         userId: user.uid,
         submittedAt: new Date().toISOString(),
-        status: 'pending'
-      });
+        status: newStatus
+      }, { merge: true });
       return true;
     } catch (err: any) {
       handleFirestoreError(err, OperationType.WRITE, 'partner_candidates');
@@ -2357,6 +2357,21 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
+  const deleteCandidate = async (id: string) => {
+    if (user && user.email === "jorisahoussi4@gmail.com") {
+      if (!window.confirm("Voulez-vous vraiment supprimer cette candidature ?")) return;
+      setIsSaving(true);
+      try {
+        await deleteDoc(doc(db, 'partner_candidates', id));
+        setError('');
+      } catch (err: any) {
+        handleFirestoreError(err, OperationType.DELETE, `partner_candidates/${id}`);
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === 'Reine2001') {
@@ -2666,6 +2681,12 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
                               Refuser
                             </button>
                           </div>
+                          <button 
+                            onClick={() => deleteCandidate(cand.id)}
+                            className="w-full px-4 py-2 bg-gray-100 text-gray-400 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all mt-2"
+                          >
+                            Supprimer
+                          </button>
                         </div>
                       </div>
                   </div>
