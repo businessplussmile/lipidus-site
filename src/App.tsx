@@ -996,7 +996,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
                 </div>
 
                 <p className="text-sm font-bold text-gray-400 flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   Les partenaires disposeront d'une application LIPIDUS dédiée pour les aider dans leurs tâches.
                 </p>
               </div>
@@ -1567,6 +1567,23 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
   }, []);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [partnerStatus, setPartnerStatus] = useState<'pending' | 'validated' | 'rejected' | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      const unsub = onSnapshot(collection(db, 'partner_candidates'), (snapshot) => {
+        let status: any = null;
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data.userId === user.uid) {
+            status = data.status;
+          }
+        });
+        setPartnerStatus(status);
+      });
+      return () => unsub();
+    }
+  }, [user]);
 
   const handleGoogleLogin = async () => {
     try {
@@ -1741,6 +1758,29 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
           <div className="relative z-10 flex flex-col items-center text-center">
             <h1 className="text-4xl lg:text-5xl font-black tracking-tighter mb-4 text-white font-display">LIPIDUS <span className="text-indigo-400">PRO</span></h1>
             <p className="text-indigo-200/60 font-black uppercase tracking-[0.3em] text-[10px]">Portail Partenaires & Logistique</p>
+            
+            {partnerStatus === 'validated' && (
+              <motion.a 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                href="https://lipidus.netlify.app" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="mt-8 inline-flex items-center gap-4 px-10 py-5 bg-emerald-500 text-white rounded-[25px] text-xs font-black uppercase tracking-[0.2em] hover:bg-emerald-600 transition-all shadow-2xl shadow-emerald-500/40 group"
+              >
+                Accéder à mon application LIPIDUS
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+              </motion.a>
+            )}
+
+            {partnerStatus === 'pending' && (
+              <div className="mt-8 px-8 py-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10">
+                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200 flex items-center gap-3">
+                  <Clock className="w-4 h-4 animate-pulse" />
+                  Candidature en cours d'examen
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -2025,27 +2065,10 @@ const RecruitmentForm = ({ onBack }: { onBack: () => void }) => {
            `*Motivation:* ${formData.motivation || 'Non précisée'}`;
   };
 
-  const sendToWhatsApp = async () => {
-    if (isFormValid) {
-      try {
-        setLoading(true);
-        // Save to Firestore
-        const candidateId = `${Date.now()}_${formData.phone}`;
-        await setDoc(doc(db, 'partners', candidateId), {
-          ...formData,
-          location,
-          createdAt: new Date().toISOString(),
-          status: 'pending'
-        });
-        
-        const message = generateMessage();
-        window.open(`https://wa.me/2250566783088?text=${message}`, '_blank');
-        setSuccessMsg("Candidature enregistrée et prête à être envoyée !");
-      } catch (err: any) {
-        handleFirestoreError(err, OperationType.WRITE, 'partners');
-      } finally {
-        setLoading(false);
-      }
+  const sendToWhatsApp = () => {
+    if (isFormFilled) {
+      const message = generateMessage();
+      window.open(`https://wa.me/2250566783088?text=${message}`, '_blank');
     }
   };
 
@@ -2317,6 +2340,22 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
       unsubAuth();
     };
   }, []);
+
+  const updateCandidateStatus = async (id: string, status: 'pending' | 'validated' | 'rejected') => {
+    if (user && user.email === "jorisahoussi4@gmail.com") {
+      setIsSaving(true);
+      try {
+        await setDoc(doc(db, 'partner_candidates', id), { status }, { merge: true });
+        setError('');
+      } catch (err: any) {
+        handleFirestoreError(err, OperationType.WRITE, `partner_candidates/${id}`);
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      setError("Vous devez être connecté avec le compte administrateur pour modifier le statut.");
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2593,22 +2632,42 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
                       )}
                     </div>
 
-                    <div className="w-full md:w-auto space-y-4">
-                      <a 
-                        href={`https://www.google.com/maps?q=${cand.location.latitude},${cand.location.longitude}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center justify-center gap-3 w-full md:w-auto px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"
-                      >
-                        <MapPin className="w-4 h-4" />
-                        Voir sur Map
-                      </a>
-                      <div className="text-center">
-                        <span className="inline-block px-4 py-2 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                          En attente
-                        </span>
+                      <div className="w-full md:w-auto space-y-4">
+                        <a 
+                          href={`https://www.google.com/maps?q=${cand.location.latitude},${cand.location.longitude}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-center gap-3 w-full md:w-auto px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"
+                        >
+                          <MapPin className="w-4 h-4" />
+                          Voir sur Map
+                        </a>
+                        <div className="flex flex-col gap-2">
+                          <div className="text-center mb-2">
+                            <span className={`inline-block px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                              cand.status === 'validated' ? 'bg-emerald-50 text-emerald-600' : 
+                              cand.status === 'rejected' ? 'bg-red-50 text-red-600' : 
+                              'bg-amber-50 text-amber-600'
+                            }`}>
+                              {cand.status === 'validated' ? 'Validé' : cand.status === 'rejected' ? 'Refusé' : 'En attente'}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => updateCandidateStatus(cand.id, 'validated')}
+                              className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all"
+                            >
+                              Valider
+                            </button>
+                            <button 
+                              onClick={() => updateCandidateStatus(cand.id, 'rejected')}
+                              className="flex-1 px-4 py-2 bg-red-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 transition-all"
+                            >
+                              Refuser
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
                   </div>
                 </div>
               ))
