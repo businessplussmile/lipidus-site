@@ -72,9 +72,9 @@ service cloud.firestore {
              data.location is map &&
              data.location.latitude is number &&
              data.location.longitude is number &&
-             data.userId == request.auth.uid &&
+             (data.userId == request.auth.uid || isAdmin()) &&
              isValidTimestamp(data.submittedAt) &&
-             data.status in ['pending', 'approved', 'rejected'];
+             data.status in ['pending', 'validated', 'rejected'];
     }
 
     // ===============================================================
@@ -89,7 +89,7 @@ service cloud.firestore {
     match /partner_candidates/{candidateId} {
       allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && isValidCandidate(request.resource.data);
-      allow update: if isAdmin() && isValidCandidate(request.resource.data);
+      allow update: if (isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid)) && isValidCandidate(request.resource.data);
       allow delete: if isAdmin();
     }
 
