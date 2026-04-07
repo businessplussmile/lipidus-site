@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, ChangeEvent, Component } from 'react';
 import { MapPin, Copy, Check, Navigation, RefreshCw, User, Phone, Home, Send, Map as MapIcon, AlertTriangle, CheckCircle2, ArrowRight, Shield, Clock, Leaf, ChevronRight, Star, Instagram, Facebook, Twitter, Briefcase, Truck, Calendar, Upload } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'motion/react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -208,15 +204,7 @@ function LocationPicker({ location, setLocation }: { location: LocationData | nu
 }
 
 const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any, recrutement: any, partner: any, footer: any } }) => {
-  const mascotRef = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const leftArmRef = useRef<HTMLDivElement>(null);
-  const rightArmRef = useRef<HTMLDivElement>(null);
-  const leftEyeRef = useRef<HTMLDivElement>(null);
-  const rightEyeRef = useRef<HTMLDivElement>(null);
-  const mouthRef = useRef<HTMLDivElement>(null);
-  const shadowRef = useRef<HTMLDivElement>(null);
-  
+  const [state, setState] = useState<'hello' | 'walking' | 'jumping' | 'resting' | 'goodbye'>('hello');
   const [isHovered, setIsHovered] = useState(false);
   const [recruitPhase, setRecruitPhase] = useState(0);
   const [recruitMsgIndex, setRecruitMsgIndex] = useState(0);
@@ -228,209 +216,12 @@ const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any,
   const isPartnerInView = useInView(sectionRefs.partner, { amount: 0.3 });
   const isFooterInView = useInView(sectionRefs.footer, { amount: 0.3 });
 
-  const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
-
   useEffect(() => {
     const handleResize = () => setScreenWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // GSAP Animations
-  useEffect(() => {
-    if (!mascotRef.current) return;
-
-    // Idle Animation (Breathing)
-    const idleTween = gsap.to(bodyRef.current, {
-      scaleY: 1.05,
-      scaleX: 0.98,
-      duration: 1.5,
-      repeat: -1,
-      yoyo: true,
-      ease: "power1.inOut"
-    });
-
-    const shadowTween = gsap.to(shadowRef.current, {
-      scale: 1.1,
-      opacity: 0.15,
-      duration: 1.5,
-      repeat: -1,
-      yoyo: true,
-      ease: "power1.inOut"
-    });
-
-    // Scroll Behavior
-    const st = ScrollTrigger.create({
-      trigger: "body",
-      start: "top top",
-      end: "bottom bottom",
-      onUpdate: (self) => {
-        const velocity = Math.abs(self.getVelocity());
-        const threshold = screenWidth < 768 ? 2000 : 1000;
-        
-        // Fast scroll tremble
-        if (velocity > threshold) {
-          gsap.to(mascotRef.current, {
-            x: screenWidth < 768 ? "+=1" : "+=2",
-            y: screenWidth < 768 ? "+=1" : "+=2",
-            duration: 0.05,
-            repeat: 3,
-            yoyo: true,
-            clearProps: "x,y"
-          });
-        }
-
-        // Translation douce au scroll
-        gsap.to(mascotRef.current, {
-          y: self.direction === 1 ? -10 : 10,
-          duration: 0.5,
-          overwrite: "auto"
-        });
-
-        resetInactivityTimer();
-      }
-    });
-
-    // Appearance from bottom at start
-    gsap.from(mascotRef.current, {
-      y: 200,
-      opacity: 0,
-      duration: 1.2,
-      ease: "power3.out",
-      onComplete: () => {
-        // Petit signe de la main au début
-        gsap.to(rightArmRef.current, {
-          rotate: -40,
-          duration: 0.3,
-          repeat: 3,
-          yoyo: true,
-          ease: "power1.inOut"
-        });
-      }
-    });
-
-    // Middle of page behavior (balance, look up)
-    const middleST = ScrollTrigger.create({
-      trigger: sectionRefs.offres.current,
-      start: "top center",
-      endTrigger: sectionRefs.partner.current,
-      end: "bottom center",
-      onToggle: (self) => {
-        if (self.isActive) {
-          gsap.to(bodyRef.current, {
-            rotate: 5,
-            duration: 2,
-            repeat: -1,
-            yoyo: true,
-            ease: "sine.inOut"
-          });
-          gsap.to([leftEyeRef.current, rightEyeRef.current], {
-            y: -2,
-            duration: 0.5
-          });
-        } else {
-          gsap.to(bodyRef.current, { rotate: 0, duration: 0.5 });
-          gsap.to([leftEyeRef.current, rightEyeRef.current], { y: 0, duration: 0.5 });
-        }
-      }
-    });
-
-    // End of page behavior (goodbye and descend)
-    const endST = ScrollTrigger.create({
-      trigger: sectionRefs.footer.current,
-      start: "top 80%",
-      onEnter: () => {
-        gsap.to(rightArmRef.current, {
-          rotate: -60,
-          duration: 0.4,
-          repeat: -1,
-          yoyo: true
-        });
-        gsap.to(mascotRef.current, {
-          y: 150,
-          opacity: 0.5,
-          duration: 2,
-          delay: 2
-        });
-      },
-      onLeaveBack: () => {
-        gsap.to(rightArmRef.current, { rotate: 0, duration: 0.5 });
-        gsap.to(mascotRef.current, { y: 0, opacity: 1, duration: 1 });
-      }
-    });
-
-    return () => {
-      idleTween.kill();
-      shadowTween.kill();
-      st.kill();
-      middleST.kill();
-      endST.kill();
-    };
-  }, [sectionRefs, screenWidth]);
-
-  // Inactivity Timer
-  const resetInactivityTimer = () => {
-    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-    inactivityTimer.current = setTimeout(() => {
-      // Oscillation and look at visitor
-      gsap.to(bodyRef.current, {
-        x: 10,
-        repeat: 5,
-        yoyo: true,
-        duration: 0.5,
-        ease: "sine.inOut"
-      });
-      gsap.to([leftEyeRef.current, rightEyeRef.current], {
-        x: 2,
-        duration: 0.5
-      });
-    }, 10000);
-  };
-
-  useEffect(() => {
-    const handleGlobalMouseMove = () => resetInactivityTimer();
-    window.addEventListener('mousemove', handleGlobalMouseMove);
-    resetInactivityTimer();
-    return () => {
-      window.removeEventListener('mousemove', handleGlobalMouseMove);
-      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-    };
-  }, []);
-
-  // Hover and Click Interactions
-  const handleHover = () => {
-    setIsHovered(true);
-    resetInactivityTimer();
-    gsap.to(mascotRef.current, {
-      y: -20,
-      duration: 0.6,
-      ease: "elastic.out(1, 0.3)"
-    });
-  };
-
-  const handleHoverEnd = () => {
-    setIsHovered(false);
-    gsap.to(mascotRef.current, {
-      y: 0,
-      duration: 0.5,
-      ease: "power2.out"
-    });
-  };
-
-  const handleClick = () => {
-    resetInactivityTimer();
-    gsap.to(mascotRef.current, {
-      rotate: 360,
-      scale: 1.2,
-      duration: 0.8,
-      ease: "back.out(1.7)",
-      onComplete: () => {
-        gsap.to(mascotRef.current, { rotate: 0, scale: 1, duration: 0.1 });
-      }
-    });
-  };
-
-  // Recruitment Logic (Keeping existing logic but adapting)
   useEffect(() => {
     let t1: any, t2: any, t3: any;
     if (isRecrutementInView) {
@@ -458,7 +249,24 @@ const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any,
     }
   }, [recruitPhase]);
 
-  const isRiding = isPartnerInView;
+  useEffect(() => {
+    if (isFooterInView) setState('goodbye');
+    else if (isPartnerInView) setState('resting');
+    else if (isRecrutementInView) setState('jumping');
+    else if (isOffresInView) setState('walking');
+    else if (isHeroInView) setState('hello');
+  }, [isHeroInView, isOffresInView, isRecrutementInView, isPartnerInView, isFooterInView]);
+
+  const getExpression = () => {
+    if (isHovered) return 'surprised';
+    if (state === 'hello') return 'happy';
+    if (state === 'resting') return 'chill';
+    if (state === 'jumping') return 'excited';
+    return 'default';
+  };
+
+  const expression = getExpression();
+  const isRiding = state === 'resting';
   const isMokoWalking = recruitPhase === 1 || recruitPhase === 3;
 
   const recruitMessages = [
@@ -495,25 +303,43 @@ const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any,
   );
 
   return (
-    <div 
-      ref={mascotRef}
-      className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[90] pointer-events-auto"
-      onMouseEnter={handleHover}
-      onMouseLeave={handleHoverEnd}
-      onClick={handleClick}
+    <motion.div
+      initial={{ y: 200, opacity: 0 }}
+      animate={{ 
+        y: state === 'goodbye' && !isHovered ? 200 : 0, 
+        opacity: state === 'goodbye' && !isHovered ? 0 : 1,
+        x: isOffresInView ? -100 : 
+           recruitPhase === 1 ? -screenWidth + 150 : 
+           recruitPhase === 2 ? -screenWidth - 200 :
+           recruitPhase >= 3 ? -screenWidth + 400 : 0,
+      }}
+      transition={{ 
+        duration: recruitPhase === 1 || recruitPhase === 2 || recruitPhase === 3 ? 4 : 0.6,
+        type: recruitPhase === 0 ? 'spring' : 'tween',
+        damping: 20, 
+        stiffness: 100 
+      }}
+      className="fixed bottom-8 right-8 z-[90] pointer-events-auto"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative w-[70px] h-[70px] md:w-[100px] md:h-[100px] cursor-pointer flex flex-col items-center">
+      <motion.div
+        animate={{
+          scale: isHovered ? 1.1 : 1,
+          rotate: isHovered ? [0, -5, 5, 0] : 0,
+        }}
+        className="relative w-16 h-20 md:w-20 md:h-24 cursor-pointer flex flex-col items-center"
+      >
         {/* Friends (Recruitment Sequence) */}
         <AnimatePresence>
           {recruitPhase >= 3 && (
-            <div className="absolute -left-24 md:-left-32 top-4 flex gap-2 md:gap-4 z-0">
+            <div className="absolute -left-32 top-4 flex gap-4 z-0">
               <FriendMascot color="#34d399" delay={0} />
               <FriendMascot color="#6ee7b7" delay={0.1} />
             </div>
           )}
         </AnimatePresence>
-
-        {/* Moto-Tricycle - Back Layer */}
+        {/* Moto-Tricycle - Back Layer (Wheels, Seat, Exhaust) */}
         <AnimatePresence>
           {isRiding && (
             <motion.div
@@ -526,13 +352,16 @@ const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any,
               }}
               className="absolute bottom-0 w-32 h-24 z-0 -left-6"
             >
+              {/* Wheels */}
               <div className="absolute bottom-0 left-4 w-10 h-10 bg-gray-900 rounded-full border-4 border-gray-700 flex items-center justify-center shadow-lg">
                 <div className="w-6 h-6 border-2 border-dashed border-gray-600 rounded-full animate-[spin_1s_linear_infinity]" />
               </div>
               <div className="absolute bottom-0 right-4 w-10 h-10 bg-gray-900 rounded-full border-4 border-gray-700 flex items-center justify-center shadow-lg">
                 <div className="w-6 h-6 border-2 border-dashed border-gray-600 rounded-full animate-[spin_1s_linear_infinity]" />
               </div>
+              {/* Seat */}
               <div className="absolute top-8 left-8 w-14 h-4 bg-gray-800 rounded-t-xl border-b-2 border-gray-900 shadow-inner" />
+              {/* Exhaust Pipe */}
               <div className="absolute bottom-4 left-[-8px] w-10 h-3 bg-gray-400 rounded-full border-b-2 border-gray-600 rotate-[5deg]">
                 <div className="absolute right-0 w-2 h-2 bg-gray-900 rounded-full" />
               </div>
@@ -540,40 +369,69 @@ const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any,
           )}
         </AnimatePresence>
 
-        {/* Arms */}
+        {/* Arms - Positioned to hold handlebars */}
         <div className="absolute inset-0 flex justify-between items-center px-[-10px] z-25 pointer-events-none">
-          <div 
-            ref={leftArmRef}
+          <motion.div 
+            animate={{ 
+              rotate: state === 'hello' ? [0, -40, 0] : isRiding ? -30 : 0,
+              y: state === 'jumping' ? -10 : isRiding ? 5 : 0,
+              x: isRiding ? 10 : 0
+            }}
+            transition={{ repeat: state === 'hello' ? Infinity : 0, duration: 0.5 }}
             className="w-6 h-2 bg-emerald-400 rounded-full origin-right border border-white/10" 
           />
-          <div 
-            ref={rightArmRef}
+          <motion.div 
+            animate={{ 
+              rotate: isRiding ? 30 : 0,
+              y: state === 'jumping' ? -10 : isRiding ? 5 : 0,
+              x: isRiding ? -5 : 0
+            }}
             className="w-6 h-2 bg-emerald-400 rounded-full origin-left border border-white/10" 
           />
         </div>
 
         {/* Mascot Body */}
-        <div
-          ref={bodyRef}
+        <motion.div
+          animate={{
+            y: isRiding ? -5 : 
+               isMokoWalking ? [0, -8, 0] : 
+               state === 'jumping' ? [0, -20, 0] : 
+               state === 'walking' ? [0, -4, 0] : 
+               0,
+            rotate: isMokoWalking ? [-5, 5, -5] : 0,
+            scaleY: isRiding ? 0.85 : [1, 0.98, 1.02, 1],
+          }}
+          transition={{
+            duration: isMokoWalking ? 0.8 : state === 'jumping' ? 0.6 : 1.5,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
           className="relative w-full h-full bg-emerald-500 rounded-t-[30px] rounded-b-[15px] shadow-2xl shadow-emerald-500/20 flex flex-col items-center justify-center overflow-hidden border-4 border-white/10 z-10"
         >
           <div className="absolute top-2 left-3 w-4 h-2 bg-white/20 rounded-full blur-[1px] rotate-[-15deg]" />
 
           {/* Eyes */}
           <div className="flex gap-3 mb-1">
-            <div ref={leftEyeRef} className="w-2.5 h-2.5 bg-black rounded-full relative">
+            <div className="w-2.5 h-2.5 bg-black rounded-full relative">
               <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full" />
             </div>
-            <div ref={rightEyeRef} className="w-2.5 h-2.5 bg-black rounded-full relative">
+            <div className="w-2.5 h-2.5 bg-black rounded-full relative">
               <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full" />
             </div>
           </div>
 
           {/* Mouth */}
-          <div ref={mouthRef} className="w-4 h-1.5 bg-black/20 rounded-full" />
-        </div>
+          <motion.div 
+            animate={{ 
+              width: expression === 'surprised' ? 14 : expression === 'happy' ? 18 : 8,
+              height: expression === 'surprised' ? 14 : expression === 'happy' ? 6 : 2,
+              borderRadius: expression === 'happy' ? "0 0 15px 15px" : "15px"
+            }}
+            className="bg-black/20" 
+          />
+        </motion.div>
 
-        {/* Moto-Tricycle - Front Layer */}
+        {/* Moto-Tricycle - Front Layer (Body, Headlight, Handlebar) */}
         <AnimatePresence>
           {isRiding && (
             <motion.div
@@ -586,17 +444,25 @@ const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any,
               }}
               className="absolute bottom-0 w-32 h-24 z-30 -left-6 pointer-events-none"
             >
+              {/* Main Body */}
               <div className="absolute bottom-2 left-0 w-full h-12 bg-gradient-to-b from-amber-300 to-amber-500 rounded-[20px] border-2 border-amber-600 shadow-xl overflow-hidden">
                 <div className="absolute top-1 left-4 w-16 h-2 bg-white/30 rounded-full blur-[1px]" />
+                <div className="absolute bottom-2 right-8 flex gap-1">
+                  <div className="w-1 h-4 bg-amber-700/30 rounded-full" />
+                  <div className="w-1 h-4 bg-amber-700/30 rounded-full" />
+                </div>
               </div>
+              {/* Front Fork & Handlebar */}
               <div className="absolute top-2 right-4 w-4 h-16 bg-gray-400 rounded-full rotate-[-20deg] border-r-2 border-gray-500 shadow-sm" />
               <div className="absolute top-0 right-0 w-10 h-4 bg-gray-900 rounded-full border-2 border-gray-700 shadow-md flex items-center justify-between px-1">
                 <div className="w-2 h-2 bg-gray-600 rounded-full" />
                 <div className="w-2 h-2 bg-gray-600 rounded-full" />
               </div>
+              {/* Headlight */}
               <div className="absolute top-6 right-1 w-6 h-6 bg-white rounded-full border-2 border-amber-200 shadow-[0_0_15px_rgba(255,255,255,0.8)] flex items-center justify-center overflow-hidden">
                 <div className="w-full h-full bg-gradient-to-tr from-amber-100 to-white" />
               </div>
+              {/* Windshield */}
               <div className="absolute top-[-10px] right-6 w-8 h-10 bg-sky-200/40 backdrop-blur-sm rounded-t-full border border-white/30 rotate-[-10deg]" />
             </motion.div>
           )}
@@ -605,24 +471,47 @@ const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any,
         {/* Legs */}
         {!isRiding && (
           <div className="flex gap-4 mt-[-5px] z-0">
-            <div className="w-3 h-5 bg-emerald-600 rounded-full border border-white/10" />
-            <div className="w-3 h-5 bg-emerald-600 rounded-full border border-white/10" />
+            <motion.div 
+              animate={{ 
+                y: state === 'walking' ? [0, -5, 0] : 0,
+                rotate: state === 'walking' ? [0, 15, 0] : 0
+              }}
+              transition={{ repeat: Infinity, duration: 0.4 }}
+              className="w-3 h-5 bg-emerald-600 rounded-full border border-white/10" 
+            />
+            <motion.div 
+              animate={{ 
+                y: state === 'walking' ? [-5, 0, -5] : 0,
+                rotate: state === 'walking' ? [0, -15, 0] : 0
+              }}
+              transition={{ repeat: Infinity, duration: 0.4 }}
+              className="w-3 h-5 bg-emerald-600 rounded-full border border-white/10" 
+            />
           </div>
         )}
 
         {/* Shadow */}
-        <div ref={shadowRef} className="w-12 h-2 bg-black rounded-full blur-md mt-2 opacity-20" />
+        {!isRiding && (
+          <motion.div
+            animate={{
+              scale: state === 'jumping' ? [1, 0.6, 1] : [1, 0.9, 1],
+              opacity: state === 'jumping' ? [0.2, 0.1, 0.2] : [0.2, 0.15, 0.2],
+            }}
+            transition={{ duration: state === 'jumping' ? 0.6 : 1.5, repeat: Infinity }}
+            className="w-12 h-2 bg-black rounded-full blur-md mt-2"
+          />
+        )}
 
         {/* Speech Bubble */}
         <AnimatePresence>
           {(isHovered || isOffresInView || isRiding || recruitPhase === 4) && (
             <motion.div
               initial={{ opacity: 0, scale: 0.5, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: screenWidth < 768 ? -55 : -70 }}
+              animate={{ opacity: 1, scale: 1, y: -70 }}
               exit={{ opacity: 0, scale: 0.5, y: 10 }}
-              className="absolute left-1/2 -translate-x-1/2 bg-white px-3 md:px-5 py-2 rounded-2xl shadow-2xl border border-gray-100 whitespace-nowrap z-50"
+              className="absolute left-1/2 -translate-x-1/2 bg-white px-5 py-2 rounded-2xl shadow-2xl border border-gray-100 whitespace-nowrap z-50"
             >
-              <p className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-emerald-600">
+              <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600">
                 {recruitPhase === 4 ? recruitMessages[recruitMsgIndex] : 
                  isRiding ? "En route pour le partenariat ! 🛵" : 
                  isOffresInView ? "On s'abonne ? 🚀" : 
@@ -632,8 +521,8 @@ const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any,
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
@@ -761,7 +650,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
                 >
                   <img 
                     src={`https://i.pravatar.cc/150?u=lipidus_${i}`} 
-                    alt="User" 
+                    alt="Avis client satisfait du service de collecte de déchets LIPIDUS" 
                     className="w-full h-full object-cover transition-all duration-500 opacity-90 hover:opacity-100"
                     referrerPolicy="no-referrer"
                   />
@@ -844,7 +733,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
                 {images.collector ? (
                   <img 
                     src={images.collector} 
-                    alt="Collecteur LIPIDUS" 
+                    alt="Collecteur de déchets ménagers LIPIDUS en action sur le terrain" 
                     className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-1000"
                     referrerPolicy="no-referrer"
                   />
@@ -948,6 +837,61 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="py-32 lg:py-48 bg-[#f9f9f7] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="mb-24 lg:mb-32 text-center">
+            <h2 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.5em] mb-8">Témoignages</h2>
+            <p className="text-5xl md:text-7xl font-black tracking-[-0.05em] leading-[0.85] font-display text-black">Ce que disent <br /> nos clients.</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+            {[
+              {
+                name: "Marie D.",
+                role: "Résidente, Cocody",
+                text: "Depuis que nous utilisons LIPIDUS, notre quartier est beaucoup plus propre. Le service est ponctuel et l'équipe très professionnelle."
+              },
+              {
+                name: "Koffi A.",
+                role: "Gérant de restaurant, Marcory",
+                text: "La gestion des déchets pour notre commerce était un casse-tête. Avec l'abonnement LIPIDUS Pro, tout est géré sans accroc."
+              },
+              {
+                name: "Sarah M.",
+                role: "Mère de famille, Yopougon",
+                text: "Une application simple à utiliser et un service client réactif. Je recommande vivement pour la tranquillité d'esprit au quotidien."
+              }
+            ].map((testimonial, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: i * 0.2 }}
+                className="bg-white p-10 lg:p-12 rounded-[30px] lg:rounded-[40px] shadow-xl shadow-black/5 relative"
+              >
+                <div className="flex gap-1 mb-6">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="text-lg lg:text-xl font-medium text-gray-600 mb-8 leading-relaxed">"{testimonial.text}"</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden">
+                    <img src={`https://i.pravatar.cc/150?u=lipidus_test_${i}`} alt={`Avis de ${testimonial.name}`} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="font-black text-gray-900">{testimonial.name}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{testimonial.role}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Recruitment Section */}
       <section ref={sectionRefs.recrutement} id="recrutement" className="py-32 lg:py-48 bg-gray-900 text-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
@@ -963,7 +907,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
                 {images.commercials ? (
                   <img 
                     src={images.commercials} 
-                    alt="Équipe Commerciale" 
+                    alt="Équipe commerciale LIPIDUS pour la gestion des abonnements de collecte" 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                     referrerPolicy="no-referrer"
                   />
@@ -1052,7 +996,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
                 {images.partner ? (
                   <img 
                     src={images.partner} 
-                    alt="Partenaire LIPIDUS Pro" 
+                    alt="Partenaire professionnel LIPIDUS Pro pour la gestion des déchets d'entreprise" 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                     referrerPolicy="no-referrer"
                   />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Shield, Leaf, Menu, X, Facebook, Twitter, Instagram, Phone, Map as MapIcon, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Shield, Leaf, Menu, X, Facebook, Twitter, Instagram, Phone, Map as MapIcon, CheckCircle2, Star } from 'lucide-react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { GoogleGenAI } from "@google/genai";
@@ -172,7 +172,7 @@ export const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: Land
                 {images.collector ? (
                   <img 
                     src={images.collector} 
-                    alt="Collecteur LIPIDUS" 
+                    alt="Collecteur de déchets ménagers LIPIDUS en action sur le terrain" 
                     className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-1000"
                     referrerPolicy="no-referrer"
                   />
@@ -252,6 +252,61 @@ export const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: Land
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="py-32 lg:py-48 bg-[#f9f9f7] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="mb-24 lg:mb-32 text-center">
+            <h2 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.5em] mb-8">Témoignages</h2>
+            <p className="text-5xl md:text-7xl font-black tracking-[-0.05em] leading-[0.85] font-display text-black">Ce que disent <br /> nos clients.</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+            {[
+              {
+                name: "Marie D.",
+                role: "Résidente, Cocody",
+                text: "Depuis que nous utilisons LIPIDUS, notre quartier est beaucoup plus propre. Le service est ponctuel et l'équipe très professionnelle."
+              },
+              {
+                name: "Koffi A.",
+                role: "Gérant de restaurant, Marcory",
+                text: "La gestion des déchets pour notre commerce était un casse-tête. Avec l'abonnement LIPIDUS Pro, tout est géré sans accroc."
+              },
+              {
+                name: "Sarah M.",
+                role: "Mère de famille, Yopougon",
+                text: "Une application simple à utiliser et un service client réactif. Je recommande vivement pour la tranquillité d'esprit au quotidien."
+              }
+            ].map((testimonial, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: i * 0.2 }}
+                className="bg-white p-10 lg:p-12 rounded-[30px] lg:rounded-[40px] shadow-xl shadow-black/5 relative"
+              >
+                <div className="flex gap-1 mb-6">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="text-lg lg:text-xl font-medium text-gray-600 mb-8 leading-relaxed">"{testimonial.text}"</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden">
+                    <img src={`https://i.pravatar.cc/150?u=lipidus_test_${i}`} alt={`Avis de ${testimonial.name}`} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="font-black text-gray-900">{testimonial.name}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{testimonial.role}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Recruitment Section */}
       <section id="recrutement" className="py-32 lg:py-48 bg-gray-900 text-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
@@ -267,7 +322,7 @@ export const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: Land
                 {images.commercials ? (
                   <img 
                     src={images.commercials} 
-                    alt="Équipe Commerciale" 
+                    alt="Équipe commerciale LIPIDUS pour la gestion des abonnements de collecte" 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                     referrerPolicy="no-referrer"
                   />
@@ -323,7 +378,7 @@ export const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: Land
                 {images.partner ? (
                   <img 
                     src={images.partner} 
-                    alt="Partenaire LIPIDUS Pro" 
+                    alt="Partenaire professionnel LIPIDUS Pro pour la gestion des déchets d'entreprise" 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                     referrerPolicy="no-referrer"
                   />
