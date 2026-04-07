@@ -529,6 +529,36 @@ const LipiCompanion = ({ sectionRefs }: { sectionRefs: { hero: any, offres: any,
 const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }: { onSubscribe: (offer?: string) => void, onPartner: () => void, onRecruit: () => void, onAdmin: () => void, sectionRefs: any }) => {
   const [images, setImages] = useState<{ [key: string]: string }>({});
   const [isGenerating, setIsGenerating] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [partnerStatus, setPartnerStatus] = useState<'pending' | 'validated' | 'rejected' | null>(null);
+
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+    });
+    return () => unsubAuth();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      const q = query(collection(db, 'partner_candidates'), where('userId', '==', user.uid));
+      const unsub = onSnapshot(q, (snapshot) => {
+        let currentStatus: any = null;
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data.status === 'validated') {
+            currentStatus = 'validated';
+          } else if (currentStatus !== 'validated') {
+            currentStatus = data.status;
+          }
+        });
+        setPartnerStatus(currentStatus);
+      });
+      return () => unsub();
+    } else {
+      setPartnerStatus(null);
+    }
+  }, [user]);
 
   useEffect(() => {
     // Listen to images in Firestore (using individual documents to avoid 1MB limit)
@@ -995,10 +1025,23 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
                   ))}
                 </div>
 
-                <p className="text-sm font-bold text-gray-400 flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Les partenaires disposeront d'une application LIPIDUS dédiée pour les aider dans leurs tâches.
-                </p>
+                <div className="space-y-6">
+                  <p className="text-sm font-bold text-gray-400 flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Les partenaires disposeront d'une application LIPIDUS dédiée pour les aider dans leurs tâches.
+                  </p>
+                  {partnerStatus === 'validated' && (
+                    <a 
+                      href="https://lipidus.netlify.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-3 px-6 py-3 bg-emerald-100 text-emerald-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-200 transition-all"
+                    >
+                      Accéder à l'application LIPIDUS
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
               </div>
 
               <div className="bg-emerald-50/50 p-10 lg:p-14 rounded-[40px] lg:rounded-[60px] border border-emerald-100/50 backdrop-blur-sm">
