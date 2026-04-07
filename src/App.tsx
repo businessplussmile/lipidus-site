@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import { GoogleGenAI } from "@google/genai";
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, getDocFromServer, collection, deleteDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, getDocFromServer, collection, deleteDoc, query, where } from 'firebase/firestore';
 
 // Error Handling Types
 enum OperationType {
@@ -1571,12 +1571,19 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
 
   useEffect(() => {
     if (user) {
-      const unsub = onSnapshot(doc(db, 'partner_candidates', user.uid), (docSnap) => {
-        if (docSnap.exists()) {
-          setPartnerStatus(docSnap.data().status);
-        } else {
-          setPartnerStatus(null);
-        }
+      const q = query(collection(db, 'partner_candidates'), where('userId', '==', user.uid));
+      const unsub = onSnapshot(q, (snapshot) => {
+        let currentStatus: any = null;
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          // If any document is validated, we consider the user validated
+          if (data.status === 'validated') {
+            currentStatus = 'validated';
+          } else if (currentStatus !== 'validated') {
+            currentStatus = data.status;
+          }
+        });
+        setPartnerStatus(currentStatus);
       });
       return () => unsub();
     }
