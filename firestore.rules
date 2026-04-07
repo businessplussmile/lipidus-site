@@ -1,32 +1,105 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: settings
+// Document ID: img_[key]
+// Fields:
+//   - url: string (required) - Base64 or URL of the image
+//
+// Collection: partner_candidates
+// Document ID: [userId]_[timestamp]
+// Fields:
+//   - fullName: string (required)
+//   - phone: string (required)
+//   - email: string (required)
+//   - commune: string (required)
+//   - equipmentType: string (required)
+//   - experience: string (optional)
+//   - location: map (required) { latitude: number, longitude: number, accuracy: number }
+//   - userId: string (required) - UID of the candidate
+//   - submittedAt: string (required) - ISO timestamp
+//   - status: string (required) - 'pending', 'approved', 'rejected'
+//
+// ===============================================================
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
     // ===============================================================
     // Helper Functions
     // ===============================================================
-    
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    function isAdmin() {
-      return isAuthenticated() && 
-        (request.auth.token.email == "jorisahoussi4@gmail.com" && request.auth.token.email_verified == true);
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function hasOnlyAllowedFields(fields) {
-      return request.resource.data.keys().hasOnly(fields);
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "jorisahoussi4@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is string && ts.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidSetting(data) {
+      return data.keys().hasOnly(['url']) &&
+             data.url is string && data.url.size() < 1000000; // ~1MB limit for Base64
+    }
+
+    function isValidCandidate(data) {
+      return data.keys().hasAll(['fullName', 'phone', 'email', 'commune', 'equipmentType', 'location', 'userId', 'submittedAt', 'status']) &&
+             data.fullName is string && data.fullName.size() > 0 && data.fullName.size() < 100 &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() < 20 &&
+             isValidEmail(data.email) &&
+             data.commune is string && data.commune.size() > 0 && data.commune.size() < 50 &&
+             data.equipmentType is string &&
+             data.location is map &&
+             data.location.latitude is number &&
+             data.location.longitude is number &&
+             data.userId == request.auth.uid &&
+             isValidTimestamp(data.submittedAt) &&
+             data.status in ['pending', 'approved', 'rejected'];
     }
 
     // ===============================================================
     // Rules
     // ===============================================================
 
-    match /settings/{docId} {
-      // Publicly readable so visitors can see the landing page images
+    match /settings/{settingId} {
       allow read: if true;
-      // Only admins can update the images (individual documents to avoid 1MB limit)
-      allow write: if isAdmin() && docId in ['img_collector', 'img_commercials', 'img_partner'] && hasOnlyAllowedFields(['url']);
+      allow write: if isAdmin() && isValidSetting(request.resource.data);
+    }
+
+    match /partner_candidates/{candidateId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && isValidCandidate(request.resource.data);
+      allow update: if isAdmin() && isValidCandidate(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    match /test/connection {
+      allow read: if true;
     }
   }
 }

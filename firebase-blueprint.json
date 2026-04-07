@@ -1,30 +1,48 @@
 {
   "entities": {
-    "SiteImage": {
-      "title": "Site Image",
-      "description": "A single image stored in Firestore.",
+    "PartnerCandidate": {
+      "title": "PartnerCandidate",
+      "description": "A candidate applying for LIPIDUS PRO partnership.",
       "type": "object",
       "properties": {
-        "url": {
-          "type": "string",
-          "description": "Base64 data of the image."
-        }
+        "fullName": { "type": "string", "description": "Full name of the candidate" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "email": { "type": "string", "format": "email", "description": "Email address" },
+        "commune": { "type": "string", "description": "Commune of residence" },
+        "equipmentType": { "type": "string", "description": "Type of equipment used (e.g. Tricycle)" },
+        "experience": { "type": "string", "description": "Previous experience" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" },
+            "accuracy": { "type": "number" }
+          }
+        },
+        "userId": { "type": "string", "description": "Firebase Auth UID of the candidate" },
+        "submittedAt": { "type": "string", "format": "date-time", "description": "ISO timestamp of submission" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] }
+      },
+      "required": ["fullName", "phone", "email", "commune", "location", "userId", "submittedAt"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "Application settings, primarily images.",
+      "type": "object",
+      "properties": {
+        "url": { "type": "string", "description": "Base64 or URL of the image" }
       },
       "required": ["url"]
     }
   },
   "firestore": {
-    "/settings/img_collector": {
-      "schema": "SiteImage",
-      "description": "The collector image for the hero section."
+    "/partner_candidates/{candidateId}": {
+      "schema": "PartnerCandidate",
+      "description": "Collection of partner applications"
     },
-    "/settings/img_commercials": {
-      "schema": "SiteImage",
-      "description": "The commercials image for the recruitment section."
-    },
-    "/settings/img_partner": {
-      "schema": "SiteImage",
-      "description": "The partner image for the pro section."
+    "/settings/{settingId}": {
+      "schema": "Setting",
+      "description": "Collection of app settings and images"
     }
   }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Shield, Leaf, Menu, X, Facebook, Twitter, Instagram, Phone, Map as MapIcon, CheckCircle2, Star } from 'lucide-react';
+import { ArrowRight, Shield, Leaf, Menu, X, Facebook, Twitter, Instagram, Phone, Map as MapIcon, CheckCircle2, Star, Check } from 'lucide-react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { GoogleGenAI } from "@google/genai";
@@ -147,10 +147,12 @@ export const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: Land
                 Abidjan, Côte d'Ivoire
               </div>
               <h1 className="text-6xl md:text-7xl lg:text-[110px] font-black leading-[0.85] mb-12 tracking-[-0.05em] text-gray-900 font-display">
-                Gardez les mains <span className="text-emerald-600">propre</span>, on se sali pour <span className="text-emerald-600">vous</span>.
+                Gardez les mains <span className="text-emerald-600">propres</span>, on se salit pour <span className="text-emerald-600">vous</span>.
               </h1>
               <p className="text-lg lg:text-xl text-gray-500 mb-16 max-w-xl leading-relaxed font-medium">
-                LIPIDUS redéfinit la propreté urbaine à Abidjan. Un service de collecte de proximité, fiable et engagé pour un environnement sain.
+                Une fois votre adresse enregistrée, notre <span className="text-emerald-600 font-bold">"Système de Cartographie Optimisée"</span> prend le relais. Vous n'avez plus besoin de guetter le camion ou de négocier avec des ramasseurs informels. Votre maison entre dans notre zone de protection prioritaire.
+                <br /><br />
+                <span className="text-gray-900 font-black uppercase text-xs tracking-widest">Bénéfice :</span> Vous ne gérez plus, vous profitez.
               </p>
               <div onClick={onSubscribe} className="inline-flex items-center gap-6 cursor-pointer group">
                 <span className="text-xl lg:text-2xl font-black uppercase tracking-tighter text-emerald-600 border-b-4 border-emerald-600 pb-1 group-hover:text-emerald-700 group-hover:border-emerald-700 transition-all font-display">
@@ -294,7 +296,12 @@ export const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: Land
                 <p className="text-lg lg:text-xl font-medium text-gray-600 mb-8 leading-relaxed">"{testimonial.text}"</p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/150?u=lipidus_test_${i}`} alt={`Avis de ${testimonial.name}`} className="w-full h-full object-cover" />
+                    <img 
+                      src={images[`test_avatar_${i}`] || `https://i.pravatar.cc/150?u=lipidus_test_${i}`} 
+                      alt={`Avis de ${testimonial.name}`} 
+                      className="w-full h-full object-cover" 
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
                   <div>
                     <p className="font-black text-gray-900">{testimonial.name}</p>
@@ -359,12 +366,41 @@ export const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin }: Land
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-24 lg:gap-32 items-center">
             <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 1 }}>
-              <h2 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.5em] mb-10">LIPIDUS Pro</h2>
-              <h3 className="text-5xl md:text-7xl lg:text-[90px] font-black tracking-[-0.05em] font-display mb-12 leading-[0.85]">Rentabilisez votre <br /> moto-tricycle.</h3>
-              <p className="text-lg lg:text-xl text-gray-500 mb-16 leading-relaxed font-medium">Vous possédez un tricycle ? Devenez un acteur clé de la salubrité à Abidjan et générez des revenus stables et importants.</p>
+              <h2 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.5em] mb-10">PARTENAIRES LIPIDUS PRO (Tricycles)</h2>
+              <h3 className="text-5xl md:text-7xl lg:text-[80px] font-black tracking-[-0.05em] font-display mb-12 leading-[0.85]">Gagnez en 2 jours ce que les autres gagnent en une semaine.</h3>
+              
+              <div className="space-y-8 mb-16">
+                <p className="text-xl font-bold text-emerald-600 leading-relaxed italic">
+                  « Pourquoi fatiguer votre tricycle 7 jours sur 7 pour des miettes ? Rejoignez Lipidus Pro : travaillez moins, gagnez plus, et soyez payé à temps. »
+                </p>
+                
+                <div className="grid gap-6">
+                  {[
+                    { title: "Liberté de temps", desc: "Vous ne travaillez que 2 jours par semaine. Le reste de la semaine, vous disposez de votre temps et vous reposez votre matériel." },
+                    { title: "Paiement Garanti", desc: "Ne courez plus après l'argent des clients. C’est LIPIDUS qui vous paie directement à la fin du mois, sans discussion." },
+                    { title: "Itinéraire Intelligent", desc: "Nous vous donnons une feuille de route précise. Pas de tours inutiles, vous allez droit au but pour économiser votre carburant." }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex gap-4">
+                      <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-1">
+                        <Check className="w-3 h-3 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-black text-gray-900 uppercase text-[10px] tracking-widest mb-1">{item.title}</p>
+                        <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-sm font-bold text-gray-400 flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Les partenaires disposeront d'une application LIPIDUS dédiée pour les aider dans leurs tâches.
+                </p>
+              </div>
+
               <div className="bg-emerald-50/50 p-10 lg:p-14 rounded-[40px] lg:rounded-[60px] border border-emerald-100/50 backdrop-blur-sm">
-                <p className="text-emerald-600 font-black text-4xl lg:text-6xl tracking-tighter mb-4 font-display">+400 000f / mois</p>
-                <p className="text-emerald-800/40 font-black uppercase tracking-[0.2em] text-[10px]">Potentiel de gain pour nos partenaires Pro</p>
+                <p className="text-emerald-600 font-black text-4xl lg:text-6xl tracking-tighter mb-4 font-display">+400 000 FCFA / mois</p>
+                <p className="text-emerald-800/40 font-black uppercase tracking-[0.2em] text-[10px]">Rentabilité maximale avec une organisation professionnelle</p>
               </div>
               <div className="mt-16">
                 <div onClick={onPartner} className="inline-flex items-center gap-6 cursor-pointer group">

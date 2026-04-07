@@ -649,7 +649,7 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
                   className="w-14 h-14 rounded-full border-[6px] border-[#f9f9f7] overflow-hidden bg-white shadow-xl shadow-black/5 relative transition-all duration-300"
                 >
                   <img 
-                    src={`https://i.pravatar.cc/150?u=lipidus_${i}`} 
+                    src={images[`hero_avatar_${i}`] || `https://i.pravatar.cc/150?u=lipidus_${i}`} 
                     alt="Avis client satisfait du service de collecte de déchets LIPIDUS" 
                     className="w-full h-full object-cover transition-all duration-500 opacity-90 hover:opacity-100"
                     referrerPolicy="no-referrer"
@@ -705,10 +705,12 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
                 Abidjan, Côte d'Ivoire
               </div>
               <h1 className="text-6xl md:text-7xl lg:text-[110px] font-black leading-[0.85] mb-12 tracking-[-0.05em] text-gray-900 font-display">
-                Gardez les mains <span className="text-amber-500">propre</span>, on se sali pour <span className="text-amber-500">vous</span>.
+                Gardez les mains <span className="text-amber-500">propres</span>, on se salit pour <span className="text-amber-500">vous</span>.
               </h1>
               <p className="text-lg lg:text-xl text-gray-500 mb-16 max-w-xl leading-relaxed font-medium">
-                LIPIDUS redéfinit la propreté urbaine à Abidjan. Un service de collecte de proximité, fiable et engagé pour un environnement sain.
+                Une fois votre adresse enregistrée, notre <span className="text-amber-600 font-bold">"Système de Cartographie Optimisée"</span> prend le relais. Vous n'avez plus besoin de guetter le camion ou de négocier avec des ramasseurs informels. Votre maison entre dans notre zone de protection prioritaire.
+                <br /><br />
+                <span className="text-gray-900 font-black uppercase text-xs tracking-widest">Bénéfice :</span> Vous ne gérez plus, vous profitez.
               </p>
               <div 
                 onClick={() => onSubscribe()}
@@ -879,7 +881,12 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
                 <p className="text-lg lg:text-xl font-medium text-gray-600 mb-8 leading-relaxed">"{testimonial.text}"</p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/150?u=lipidus_test_${i}`} alt={`Avis de ${testimonial.name}`} className="w-full h-full object-cover" />
+                    <img 
+                      src={images[`test_avatar_${i}`] || `https://i.pravatar.cc/150?u=lipidus_test_${i}`} 
+                      alt={`Avis de ${testimonial.name}`} 
+                      className="w-full h-full object-cover" 
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
                   <div>
                     <p className="font-black text-gray-900">{testimonial.name}</p>
@@ -962,14 +969,41 @@ const LandingPage = ({ onSubscribe, onPartner, onRecruit, onAdmin, sectionRefs }
               viewport={{ once: true }}
               transition={{ duration: 1 }}
             >
-              <h2 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.5em] mb-10">LIPIDUS Pro</h2>
-              <h3 className="text-5xl md:text-7xl lg:text-[90px] font-black tracking-[-0.05em] leading-[0.85] mb-12 font-display">Rentabilisez votre <br /> moto-tricycle.</h3>
-              <p className="text-lg lg:text-xl text-gray-500 mb-16 leading-relaxed font-medium">
-                Vous possédez un tricycle ? Devenez un acteur clé de la salubrité à Abidjan et générez des revenus stables et importants.
-              </p>
+              <h2 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.5em] mb-10">PARTENAIRES LIPIDUS PRO (Tricycles)</h2>
+              <h3 className="text-5xl md:text-7xl lg:text-[80px] font-black tracking-[-0.05em] leading-[0.85] mb-12 font-display">Gagnez en 2 jours ce que les autres gagnent en une semaine.</h3>
+              
+              <div className="space-y-8 mb-16">
+                <p className="text-xl font-bold text-emerald-600 leading-relaxed italic">
+                  « Pourquoi fatiguer votre tricycle 7 jours sur 7 pour des miettes ? Rejoignez Lipidus Pro : travaillez moins, gagnez plus, et soyez payé à temps. »
+                </p>
+                
+                <div className="grid gap-6">
+                  {[
+                    { title: "Liberté de temps", desc: "Vous ne travaillez que 2 jours par semaine. Le reste de la semaine, vous disposez de votre temps et vous reposez votre matériel." },
+                    { title: "Paiement Garanti", desc: "Ne courez plus après l'argent des clients. C’est LIPIDUS qui vous paie directement à la fin du mois, sans discussion." },
+                    { title: "Itinéraire Intelligent", desc: "Nous vous donnons une feuille de route précise. Pas de tours inutiles, vous allez droit au but pour économiser votre carburant." }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex gap-4">
+                      <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-1">
+                        <Check className="w-3 h-3 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-black text-gray-900 uppercase text-[10px] tracking-widest mb-1">{item.title}</p>
+                        <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-sm font-bold text-gray-400 flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Les partenaires disposeront d'une application LIPIDUS dédiée pour les aider dans leurs tâches.
+                </p>
+              </div>
+
               <div className="bg-emerald-50/50 p-10 lg:p-14 rounded-[40px] lg:rounded-[60px] border border-emerald-100/50 backdrop-blur-sm">
-                <p className="text-emerald-600 font-black text-4xl lg:text-6xl tracking-tighter mb-4 font-display">+400 000f / mois</p>
-                <p className="text-emerald-800/40 font-black uppercase tracking-[0.2em] text-[10px]">Potentiel de gain pour nos partenaires Pro</p>
+                <p className="text-emerald-600 font-black text-4xl lg:text-6xl tracking-tighter mb-4 font-display">+400 000 FCFA / mois</p>
+                <p className="text-emerald-800/40 font-black uppercase tracking-[0.2em] text-[10px]">Rentabilité maximale avec une organisation professionnelle</p>
               </div>
               <div className="mt-16">
                 <div 
@@ -1532,6 +1566,8 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
     return () => unsubAuth();
   }, []);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleGoogleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
@@ -1600,22 +1636,49 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
            `*Position GPS:* ${mapsLink}`;
   };
 
-  const sendToWhatsApp = () => {
-    const message = generateMessage();
-    window.open(`https://wa.me/2250566783088?text=${message}`, '_blank');
+  const saveToFirestore = async () => {
+    if (!isFormValid || !user) return;
+    setIsSubmitting(true);
+    try {
+      const candidateId = `${user.uid}_${Date.now()}`;
+      await setDoc(doc(db, 'partner_candidates', candidateId), {
+        ...formData,
+        location,
+        userId: user.uid,
+        submittedAt: new Date().toISOString(),
+        status: 'pending'
+      });
+      return true;
+    } catch (err: any) {
+      handleFirestoreError(err, OperationType.WRITE, 'partner_candidates');
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const copyToClipboard = () => {
-    const mapsLink = location ? `https://www.google.com/maps?q=${location.latitude},${location.longitude}` : 'Non spécifiée';
-    const text = `CANDIDATURE PARTENAIRE LIPIDUS PRO\n\n` +
-                 `Nom: ${formData.fullName}\nTél: ${formData.phone}\nEmail: ${formData.email}\nCommune: ${formData.commune}\n` +
-                 `Équipement: ${formData.equipmentType}\nExpérience: ${formData.experience || 'Non précisée'}\n\n` +
-                 `Position GPS: ${mapsLink}`;
-    
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+  const sendToWhatsApp = async () => {
+    const saved = await saveToFirestore();
+    if (saved) {
+      const message = generateMessage();
+      window.open(`https://wa.me/2250566783088?text=${message}`, '_blank');
+    }
+  };
+
+  const copyToClipboard = async () => {
+    const saved = await saveToFirestore();
+    if (saved) {
+      const mapsLink = location ? `https://www.google.com/maps?q=${location.latitude},${location.longitude}` : 'Non spécifiée';
+      const text = `CANDIDATURE PARTENAIRE LIPIDUS PRO\n\n` +
+                   `Nom: ${formData.fullName}\nTél: ${formData.phone}\nEmail: ${formData.email}\nCommune: ${formData.commune}\n` +
+                   `Équipement: ${formData.equipmentType}\nExpérience: ${formData.experience || 'Non précisée'}\n\n` +
+                   `Position GPS: ${mapsLink}`;
+      
+      navigator.clipboard.writeText(text).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    }
   };
 
   const missingInfo = getMissingInfo();
@@ -1875,15 +1938,15 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
             </h2>
 
             <div
-              onClick={isFormValid ? sendToWhatsApp : undefined}
+              onClick={isFormValid && !isSubmitting ? sendToWhatsApp : undefined}
               className={`w-full py-6 lg:py-8 rounded-[30px] lg:rounded-[40px] font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-4 transition-all cursor-pointer ${
-                isFormValid 
+                isFormValid && !isSubmitting
                   ? 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-2xl shadow-indigo-600/30' 
                   : 'bg-gray-100 text-gray-300 cursor-not-allowed'
               }`}
             >
-              <Send className="w-5 h-5" />
-              Envoyer ma candidature
+              {isSubmitting ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+              {isSubmitting ? 'Enregistrement...' : 'Envoyer ma candidature'}
             </div>
 
             <div
@@ -1962,9 +2025,28 @@ const RecruitmentForm = ({ onBack }: { onBack: () => void }) => {
            `*Motivation:* ${formData.motivation || 'Non précisée'}`;
   };
 
-  const sendToWhatsApp = () => {
-    const message = generateMessage();
-    window.open(`https://wa.me/2250566783088?text=${message}`, '_blank');
+  const sendToWhatsApp = async () => {
+    if (isFormValid) {
+      try {
+        setLoading(true);
+        // Save to Firestore
+        const candidateId = `${Date.now()}_${formData.phone}`;
+        await setDoc(doc(db, 'partners', candidateId), {
+          ...formData,
+          location,
+          createdAt: new Date().toISOString(),
+          status: 'pending'
+        });
+        
+        const message = generateMessage();
+        window.open(`https://wa.me/2250566783088?text=${message}`, '_blank');
+        setSuccessMsg("Candidature enregistrée et prête à être envoyée !");
+      } catch (err: any) {
+        handleFirestoreError(err, OperationType.WRITE, 'partners');
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const copyToClipboard = () => {
@@ -2191,12 +2273,14 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
   const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [images, setImages] = useState<{ [key: string]: string }>({});
+  const [candidates, setCandidates] = useState<any[]>([]);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'images' | 'candidates'>('images');
 
   useEffect(() => {
     // Listen to images in Firestore
-    const unsub = onSnapshot(collection(db, 'settings'), (snapshot) => {
+    const unsubImages = onSnapshot(collection(db, 'settings'), (snapshot) => {
       const newImages: { [key: string]: string } = {};
       snapshot.forEach(docSnap => {
         if (docSnap.id.startsWith('img_')) {
@@ -2209,13 +2293,27 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
       handleFirestoreError(error, OperationType.GET, 'settings');
     });
 
+    // Listen to candidates in Firestore
+    const unsubCandidates = onSnapshot(collection(db, 'partner_candidates'), (snapshot) => {
+      const newCandidates: any[] = [];
+      snapshot.forEach(docSnap => {
+        newCandidates.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      // Sort by date descending
+      newCandidates.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+      setCandidates(newCandidates);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'partner_candidates');
+    });
+
     // Listen to auth state
     const unsubAuth = onAuthStateChanged(auth, (u) => {
       setUser(u);
     });
 
     return () => {
-      unsub();
+      unsubImages();
+      unsubCandidates();
       unsubAuth();
     };
   }, []);
@@ -2315,11 +2413,25 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
             </div>
             <div>
               <h1 className="text-3xl font-black font-display">Administration</h1>
-              <p className="text-gray-500 text-sm font-bold">Gestion des images de la page d'accueil</p>
+              <p className="text-gray-500 text-sm font-bold">Gestion du site et des candidatures</p>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
+            <div className="flex bg-gray-200 p-1 rounded-2xl mr-4">
+              <button 
+                onClick={() => setActiveTab('images')}
+                className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'images' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Images
+              </button>
+              <button 
+                onClick={() => setActiveTab('candidates')}
+                className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'candidates' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Candidats ({candidates.length})
+              </button>
+            </div>
             {user ? (
               <div className="flex items-center gap-4 bg-white p-2 pr-6 rounded-full shadow-sm border border-gray-100">
                 <img src={user.photoURL} alt={user.displayName} className="w-10 h-10 rounded-full" />
@@ -2360,39 +2472,149 @@ const AdminPage = ({ onBack }: { onBack: () => void }) => {
           </div>
         )}
 
-        <div className="grid gap-8">
-          {[
-            { key: 'collector', title: 'Image Collecteur (Section Héros)', desc: 'Image principale en haut de la page' },
-            { key: 'commercials', title: 'Image Commerciaux (Section Recrutement)', desc: 'Image de la force de vente' },
-            { key: 'partner', title: 'Image Partenaire (Section Pro)', desc: 'Image du tricycle logistique' }
-          ].map((zone) => (
-            <div key={zone.key} className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-center">
-              <div className="w-full md:w-1/3 aspect-square bg-gray-100 rounded-3xl overflow-hidden relative">
-                {images[zone.key] ? (
-                  <img src={images[zone.key]} alt={zone.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm font-bold">Aucune image</div>
-                )}
-              </div>
-              <div className="flex-1 space-y-4">
-                <h3 className="text-xl font-black font-display">{zone.title}</h3>
-                <p className="text-gray-500 text-sm">{zone.desc}</p>
-                <div className="pt-4">
-                  <label className="cursor-pointer inline-flex items-center gap-3 px-6 py-4 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-100 transition-colors">
-                    <Upload className="w-4 h-4" />
-                    Modifier l'image
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={(e) => handleImageUpload(zone.key, e)}
-                    />
-                  </label>
+        {/* Tabs */}
+        <div className="flex gap-4 mb-12">
+          <button 
+            onClick={() => setActiveTab('images')}
+            className={`px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'images' ? 'bg-gray-900 text-white shadow-xl shadow-gray-900/20' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+          >
+            Gestion Images
+          </button>
+          <button 
+            onClick={() => setActiveTab('candidates')}
+            className={`px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'candidates' ? 'bg-gray-900 text-white shadow-xl shadow-gray-900/20' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+          >
+            Candidats Pro ({candidates.length})
+          </button>
+        </div>
+
+        {activeTab === 'images' ? (
+          <div className="grid gap-8">
+            {[
+              { key: 'collector', title: 'Image Principale (Héros)', desc: 'Grande image en haut de la page' },
+              { key: 'hero_avatar_1', title: 'Avatar Héros 1', desc: 'Premier petit visage dans la section héros' },
+              { key: 'hero_avatar_2', title: 'Avatar Héros 2', desc: 'Deuxième petit visage dans la section héros' },
+              { key: 'hero_avatar_3', title: 'Avatar Héros 3', desc: 'Troisième petit visage dans la section héros' },
+              { key: 'test_avatar_0', title: 'Avatar Témoignage 1', desc: 'Photo de Marie D.' },
+              { key: 'test_avatar_1', title: 'Avatar Témoignage 2', desc: 'Photo de Koffi A.' },
+              { key: 'test_avatar_2', title: 'Avatar Témoignage 3', desc: 'Photo de Sarah M.' },
+              { key: 'commercials', title: 'Image Recrutement', desc: 'Image de la section équipe commerciale' },
+              { key: 'partner', title: 'Image Partenaire Pro', desc: 'Image de la section LIPIDUS Pro' }
+            ].map((zone) => (
+              <div key={zone.key} className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-center">
+                <div className="w-full md:w-1/3 aspect-square bg-gray-100 rounded-3xl overflow-hidden relative">
+                  {images[zone.key] ? (
+                    <img src={images[zone.key]} alt={zone.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full relative">
+                      <img 
+                        src={
+                          zone.key === 'collector' ? 'https://picsum.photos/seed/lipidus_collector/800/1000' :
+                          zone.key.startsWith('hero_avatar_') ? `https://i.pravatar.cc/150?u=lipidus_${zone.key.split('_')[2]}` :
+                          zone.key.startsWith('test_avatar_') ? `https://i.pravatar.cc/150?u=lipidus_test_${zone.key.split('_')[2]}` :
+                          zone.key === 'commercials' ? 'https://picsum.photos/seed/lipidus_team/800/800' :
+                          zone.key === 'partner' ? 'https://picsum.photos/seed/lipidus_partner/800/800' :
+                          ''
+                        } 
+                        alt="Default" 
+                        className="w-full h-full object-cover opacity-30 grayscale" 
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs font-black uppercase tracking-widest">Par défaut</div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 space-y-4">
+                  <h3 className="text-xl font-black font-display">{zone.title}</h3>
+                  <p className="text-gray-500 text-sm">{zone.desc}</p>
+                  <div className="pt-4">
+                    <label className="cursor-pointer inline-flex items-center gap-3 px-6 py-4 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-100 transition-colors">
+                      <Upload className="w-4 h-4" />
+                      Modifier l'image
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => handleImageUpload(zone.key, e)}
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {candidates.length === 0 ? (
+              <div className="bg-white p-20 rounded-[40px] text-center border border-gray-100">
+                <div className="w-20 h-20 bg-gray-50 rounded-[30px] flex items-center justify-center mx-auto mb-6">
+                  <User className="w-10 h-10 text-gray-200" />
+                </div>
+                <p className="text-gray-400 font-black uppercase tracking-widest text-xs">Aucune candidature pour le moment</p>
+              </div>
+            ) : (
+              candidates.map((cand) => (
+                <div key={cand.id} className="bg-white p-8 lg:p-10 rounded-[40px] shadow-sm border border-gray-100">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+                    <div className="space-y-6 flex-1">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center">
+                          <User className="w-6 h-6 text-indigo-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black font-display">{cand.fullName}</h3>
+                          <p className="text-xs font-bold text-gray-400">{new Date(cand.submittedAt).toLocaleString('fr-FR')}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="flex items-center gap-3">
+                          <Phone className="w-4 h-4 text-gray-300" />
+                          <span className="text-sm font-bold">{cand.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Send className="w-4 h-4 text-gray-300" />
+                          <span className="text-sm font-bold">{cand.email}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <MapIcon className="w-4 h-4 text-gray-300" />
+                          <span className="text-sm font-bold">{cand.commune}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Truck className="w-4 h-4 text-gray-300" />
+                          <span className="text-sm font-bold">{cand.equipmentType}</span>
+                        </div>
+                      </div>
+
+                      {cand.experience && (
+                        <div className="p-4 bg-gray-50 rounded-2xl">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Expérience</p>
+                          <p className="text-sm font-medium text-gray-600">{cand.experience}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="w-full md:w-auto space-y-4">
+                      <a 
+                        href={`https://www.google.com/maps?q=${cand.location.latitude},${cand.location.longitude}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-center gap-3 w-full md:w-auto px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        Voir sur Map
+                      </a>
+                      <div className="text-center">
+                        <span className="inline-block px-4 py-2 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                          En attente
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
