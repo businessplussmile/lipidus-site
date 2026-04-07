@@ -1785,17 +1785,29 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
         </div>
 
         {/* Main Content */}
-        <div className="p-8 lg:p-16 space-y-12">
-          
-          {/* Form Section */}
-          <div className="space-y-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] text-gray-500">01</span>
-                Profil Partenaire
-              </h2>
-              {isFormFilled && <CheckCircle2 className="w-6 h-6 text-indigo-500" />}
+        {partnerStatus === 'validated' ? (
+          <div className="p-8 lg:p-16 flex flex-col items-center justify-center text-center space-y-6">
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle2 className="w-10 h-10 text-emerald-600" />
             </div>
+            <h2 className="text-2xl font-black font-display text-gray-900">Félicitations !</h2>
+            <p className="text-gray-500 font-medium max-w-md">
+              Votre candidature a été validée par notre équipe. Vous faites désormais partie du réseau LIPIDUS PRO.
+              Utilisez le bouton ci-dessus pour accéder à votre espace de travail.
+            </p>
+          </div>
+        ) : (
+          <div className="p-8 lg:p-16 space-y-12">
+            
+            {/* Form Section */}
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] flex items-center gap-3">
+                  <span className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] text-gray-500">01</span>
+                  Profil Partenaire
+                </h2>
+                {isFormFilled && <CheckCircle2 className="w-6 h-6 text-indigo-500" />}
+              </div>
             
             <div className="grid md:grid-cols-2 gap-8 lg:gap-10">
               <div className="space-y-2">
@@ -2028,6 +2040,7 @@ const PartnerForm = ({ onBack }: { onBack: () => void }) => {
             )}
           </div>
         </div>
+        )}
       </motion.div>
     </div>
   );
